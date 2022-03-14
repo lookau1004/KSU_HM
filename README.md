@@ -1,3 +1,3 @@
 # KSU_HM
 
-just do it
+KSU Capstone Design
