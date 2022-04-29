@@ -93,10 +93,10 @@ class newCamara:                                                                
 
 if __name__ == '__main__':
     
-    GlobalMainDict = {}
-    sharedNum = Value('i')
+    GlobalMainDict = {}                                                     
+    sharedNum = Value('i')                                                  # 프로세스간에 데이터 공유를 위해 Value를 이용하여 공유 메모리 맵 사용
 
-    app = QtWidgets.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)                                  # PyQT5 메인 윈도우 클래스 생성 부분
     mainWindow = QtWidgets.QMainWindow()
     ui = ConfigWindow()
     ui.setupUi(mainWindow)
@@ -104,8 +104,7 @@ if __name__ == '__main__':
     mainWindow.show()
     app.exec_()
 
-    setTime = GlobalMainDict[('Config')].DefaultTimerNum
-    DefaultSecond = int(setTime)      
+    DefaultSecond = int(GlobalMainDict[('Config')].DefaultTimerNum)
 
     pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
 
@@ -122,3 +121,4 @@ if __name__ == '__main__':
 # 5. 카메라 프로세스 종료 시 타이머 프로세스도 같이 종료
 # ㅡㅡㅡㅡㅡㅡㅡㅡ 완료 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 # 6. 윈도우 UI 작업을 클래스 내부 함수로 바꿀 것
+# 7. 여러 해상도에서 UI가 크게 변하지 않을 것
