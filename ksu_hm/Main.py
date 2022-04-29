@@ -19,10 +19,16 @@ class ConfigData():                             # 옵션 설정 데이터들을 
         self.DefaultTimerNum = 0
 
 class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )                                             
-    def __init__(self):                            # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
+    def __init__(self,mainWindow):                            # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
+        self.setup_UI(mainWindow)
         super().__init__()                         # 부모 init() 실행
         self.configDict = {}                       # 딕셔너리 생성
         self.configDataClass = ConfigData()        # 데이터 클래스 생성
+        
+
+    def setup_UI(self,mainWindow):                              # 윈도우 UI 생성 부분
+        self.setupUi(mainWindow)                                # 부모 클래스의 setupUi() 실행
+        self.WinApplyBtn.clicked.connect(self.btnApply)         # 버튼에 함수 연결
 
     def input_data(self):
         global GlobalMainDict                                                           # 전역 변수 사용
@@ -40,7 +46,7 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
         
         #print("윈도우에서 sharedNum 값 : " , sharedNum.value)
 
-class newTimer:                                                                         # 타이머 클래스 ( 타이머에 관한 함수 포함 )
+class newTimer():                                                                         # 타이머 클래스 ( 타이머에 관한 함수 포함 )
     def __init__(self,DefaultSecond,sharedNum):
         self.timer_run(DefaultSecond,sharedNum)
         
@@ -55,8 +61,7 @@ class newTimer:                                                                 
         sharedNum.value = DefaultSecond
         print("refrsh ",sharedNum.value)
 
-class newCamara:                                                                        # 카메라 클래스 ( 카메라 관련 함수 )
-
+class newCamara():                                                                        # 카메라 클래스 ( 카메라 관련 함수 )
     def __init__(self,DefaultSecond,sharedNum):
         self.pTimer = Process(target = newTimer, name = "TimerProcess", args=(DefaultSecond,sharedNum,))        # 카메라 프로세스가 종료 했을때 타이머 프로세스도 종료 해야하므로 내부에서 선언
         self.pTimer.start()
@@ -92,15 +97,13 @@ class newCamara:                                                                
         self.pTimer.terminate()                                             # 타이머 프로세스 강제종료
 
 if __name__ == '__main__':
-    
+
     GlobalMainDict = {}                                                     
     sharedNum = Value('i')                                                  # 프로세스간에 데이터 공유를 위해 Value를 이용하여 공유 메모리 맵 사용
 
     app = QtWidgets.QApplication(sys.argv)                                  # PyQT5 메인 윈도우 클래스 생성 부분
     mainWindow = QtWidgets.QMainWindow()
-    ui = ConfigWindow()
-    ui.setupUi(mainWindow)
-    ui.WinApplyBtn.clicked.connect(ui.btnApply)
+    ui = ConfigWindow(mainWindow)
     mainWindow.show()
     app.exec_()
 
@@ -119,6 +122,6 @@ if __name__ == '__main__':
 # 3. 카메라 화면에 딜레이 숫자 표시
 # 4. 손 잡혔을때 딜레이 초기화
 # 5. 카메라 프로세스 종료 시 타이머 프로세스도 같이 종료
-# ㅡㅡㅡㅡㅡㅡㅡㅡ 완료 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 # 6. 윈도우 UI 작업을 클래스 내부 함수로 바꿀 것
+# ㅡㅡㅡㅡㅡㅡㅡㅡ 완료 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 # 7. 여러 해상도에서 UI가 크게 변하지 않을 것
