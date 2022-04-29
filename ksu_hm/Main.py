@@ -19,15 +19,14 @@ class ConfigData():                             # 옵션 설정 데이터들을 
         self.DefaultTimerNum = 0
 
 class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )                                             
-    def __init__(self,mainWindow):                            # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
+    def __init__(self,mainWindow):                 # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
         self.setup_UI(mainWindow)
         super().__init__()                         # 부모 init() 실행
         self.configDict = {}                       # 딕셔너리 생성
         self.configDataClass = ConfigData()        # 데이터 클래스 생성
         
-
     def setup_UI(self,mainWindow):                              # 윈도우 UI 생성 부분
-        self.setupUi(mainWindow)                                # 부모 클래스의 setupUi() 실행
+        self.setupUi(mainWindow)                                # PyQT5(Window.py)의 setupUi() 실행
         self.WinApplyBtn.clicked.connect(self.btnApply)         # 버튼에 함수 연결
 
     def input_data(self):
