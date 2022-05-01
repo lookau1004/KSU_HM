@@ -94,7 +94,7 @@ class newCamara():                                                              
         knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습        
       
         while cap.isOpened():
-            is_Mode = False
+            is_Mode = False                                                 #입력 모드를 확인하기 위한 변수
             success, frame = cap.read()
             if success:  
                 frame = cv2.flip(frame,1) # 좌우반전           
@@ -168,7 +168,7 @@ class newCamara():                                                              
                                                 break
                                                                                    
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
-                if(is_Mode):
+                if(is_Mode):                                                                        # 입력 모드 체크
                     cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,
                         1,(255,0,0),2)
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,
