@@ -86,20 +86,17 @@ class newCamara():                                                              
         detector = HandDetector(maxHands=1)
         cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
-        file = np.genfromtxt('gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
+        file = np.genfromtxt('Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
 
         knn =cv2.ml.KNearest_create() #KNN 모델 초기화
-        knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습
-        
+        knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습        
       
         while cap.isOpened():
             success, frame = cap.read()
             if success:  
-                frame = cv2.flip(frame,1) # 좌우반전
-                
-                   
+                frame = cv2.flip(frame,1) # 좌우반전           
                 frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
                 result = hands.process(frame)                               # RGB값으로 바뀐 프레임에 손 모델 해석 ( 손의 위치와 관절 탐지 )
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
@@ -117,7 +114,6 @@ class newCamara():                                                              
             
                         v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
 
-            
                         angle = np.arccos(np.einsum('nt,nt->n',
                             v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:], 
                             v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
@@ -150,7 +146,6 @@ class newCamara():                                                              
                                         v = v2 - v1 # [20,3]
             
                                         v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
-
             
                                         angle = np.arccos(np.einsum('nt,nt->n',
                                         v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:], 
@@ -174,7 +169,6 @@ class newCamara():                                                              
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     1,(255,0,0),2)
-
                 cv2.imshow('Camera Window', frame)
             
             if cv2.waitKey(1) == 27: 
@@ -182,8 +176,7 @@ class newCamara():                                                              
            
             if (sharedNum.value == 0):
                 break
-    
-    
+
         cap.release()
         cv2.destroyAllWindows()
         self.pTimer.terminate()                                             # 타이머 프로세스 강제종료
