@@ -18,7 +18,7 @@ gesture = {
     0:'start', 1:'click', 2:'two', 3:'three', 4:'four', 5:'five',
     6:'six', 7:'seve  n', 8:'eight', 9:'nine', 10:'ten',}
 
-gesture_1 = {1:'click',2:'spaceBar',}
+gesture_1 = {1:'click',9:'spaceBar',}
 
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
@@ -94,6 +94,7 @@ class newCamara():                                                              
         knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습        
       
         while cap.isOpened():
+            is_Mode = False
             success, frame = cap.read()
             if success:  
                 frame = cv2.flip(frame,1) # 좌우반전           
@@ -125,7 +126,7 @@ class newCamara():                                                              
                         idx = int(results[0][0])
                         print(idx)
                         if(idx == 0) : # 시작 제스처일 경우
-                           
+                            is_Mode = True
                             print('start')
                             print('입력')
                             
@@ -159,14 +160,17 @@ class newCamara():                                                              
                                         print(idx)
                                         if idx in gesture_1.keys():
                                             mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.  
-                                            if(idx==1): 
+                                            if(idx == 1): 
                                                 pyautogui.click()
                                                 break
-                                            elif (idx ==2): 
+                                            elif (idx == 9): 
                                                 pyautogui.press('space')
                                                 break
                                                                                    
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
+                if(is_Mode):
+                    cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                        1,(255,0,0),2)
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     1,(255,0,0),2)
                 cv2.imshow('Camera Window', frame)
