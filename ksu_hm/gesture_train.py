@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import cv2
 import mediapipe as mp
 import numpy as np
