@@ -86,7 +86,7 @@ class newCamara():                                                              
         detector = HandDetector(maxHands=1)
         cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
-        file = np.genfromtxt('Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
+        file = np.genfromtxt('ksu_hm/Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
 
