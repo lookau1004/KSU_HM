@@ -54,11 +54,11 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         global CamaraLoopOn   
         if sys.platform == "win32":
             cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.configDataClass.CamaraHeight)
         else:           
             cap = cv2.VideoCapture(0)      
-                                                               
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.configDataClass.CamaraHeight)
+
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.WinCamaraLabel.resize(width, height)                        # 윈폼 라벨을 카메라 사이즈에 맞게 조정 width,height는 int형
