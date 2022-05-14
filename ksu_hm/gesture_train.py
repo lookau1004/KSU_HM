@@ -124,7 +124,6 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
     def SaveMotion(self):                                                                      # 저장 버튼을 누르면 작동하는 함수 MediaPipe 클래스 안에 스택 함수를 사용
         if self.input_index_data():                                                            # 문자열에 값이 있다면~
             try:
-                print(int(self.configDataClass.IndexNumber) < 0 )
                 if  not int(self.configDataClass.IndexNumber) < 0 :                            # int형으로 변환 할 수 있는 문자열이면~   // 0을 넣으면 0<0 = False -> True // -1를 넣으면 True -> False
                     DataLinesInfo = self.newMP.StackToNp(self.configDataClass.IndexNumber)     # NP 스택에 저장하고 File.shape 반환
                     StringLinesInfo = self.CvtDataToString(str(DataLinesInfo))                 # 반환된 값을 원하는 문자열 추가 후 String 형태로 변환
