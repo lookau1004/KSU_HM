@@ -96,8 +96,10 @@ class newCamara():                                                              
 
         if sys.platform == "win32":
             cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+            alt_command = 'alt'
         else:           
             cap = cv2.VideoCapture(0)  
+            alt_command = 'command'
                         
         file = np.genfromtxt(self.configDataClass.CsvFilePath, delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
@@ -162,13 +164,13 @@ class newCamara():                                                              
                                 gestrue_n_times = gesture_0_times
                                 break
                             elif (idx == 3) and gesture_n_times[idx] > 2:
-                                pyautogui.hotkey('command','right')  # alt + 오른쪽 키 조합키 - 브라우저
+                                pyautogui.hotkey(alt_command,'right')  # alt + 오른쪽 키 조합키 - 브라우저
                                 pyautogui.press('right')         # 오른쪽 키 누르기 - 파워포인트
                                 is_Mode = False
                                 gestrue_n_times = gesture_0_times
                                 break
                             elif (idx == 4) and gesture_n_times[idx] > 2:
-                                pyautogui.hotkey('command','left')   # alt + 왼쪽 키 조합키 - 브라우저
+                                pyautogui.hotkey(alt_command,'left')   # alt + 왼쪽 키 조합키 - 브라우저
                                 pyautogui.press('left')           # 왼쪽 키 누르기 - 파워포인트
                                 is_Mode = False
                                 gestrue_n_times = gesture_0_times
