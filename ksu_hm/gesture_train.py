@@ -2,7 +2,7 @@ from UI import *
 import cv2
 import mediapipe as mp
 import numpy as np
-
+import os, sys, subprocess
 import os
 import threading
 import sys
@@ -99,8 +99,11 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         sys.exit()
 
     def OpenFolder(self):                                               # CSV 폴더 여는 함수
-        os.startfile(self.configDataClass.DataFolderPath)
-
+        if sys.platform == "win32":
+            os.startfile(self.configDataClass.DataFolderPath)
+        else:
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.call([opener, self.configDataClass.DataFolderPath])
     def CheckCaptureMotionBtn(self):                                          # 카메라 시작/중단 여부 체크 함수
         global IsGetHand
         if IsGetHand:
