@@ -68,8 +68,8 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         print("Thread stoped..")        
 
     def onExit(self):
-        print("Program exit")
         self.stop()
+        print("Program exit")
         sys.exit()
 
     def CheckCamara(self):                                          # 카메라 시작/중단 여부 체크 함수
@@ -125,10 +125,13 @@ class NewMediapipe():
         self.file = np.vstack((self.file, self.data))
         return self.file.shape
     
-    def SaveFileToCsv(self):        
-        np.savetxt('ksu_hm/Data/new_gesture_train.csv', self.file, fmt='%f',delimiter=',')
-        print("CSV 파일로 저장되었습니다")
-
+    def SaveFileToCsv(self):      
+        try:  
+            np.savetxt('ksu_hm/Data/new_gesture_train.csv', self.file, fmt='%f',delimiter=',')
+            print("CSV 파일로 저장되었습니다")
+        except:
+            print("저장에서 에러가 발생했습니다")
+        
     def GraphicWithMp(self,img):        
         global IsCamaraOn
         img = cv2.flip(img, 1)    
@@ -159,7 +162,7 @@ class NewMediapipe():
                 self.data = np.array([self.angle], dtype=np.float32)
                 self.mp_drawing.draw_landmarks(img, res, self.mp_hands.HAND_CONNECTIONS)   
                 return img   
-                
+
         IsCamaraOn = False  
         return img
 
