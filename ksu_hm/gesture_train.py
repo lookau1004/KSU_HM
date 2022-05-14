@@ -38,7 +38,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.WinCamaraLabel.resize(width, height)                    # width,height는 int형
+        self.WinCamaraLabel.resize(width, height)                    # 윈폼 라벨을 카메라 사이즈에 맞게 조정 width,height는 int형
 
         while self.running:
             ret, img = cap.read()
@@ -52,23 +52,23 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
             else:
                 print("cannot read frame.")
                 break
+
         cap.release()
         self.newMP.SaveFileToCsv()                                  # 루프에서 나오면 저장된 모션 값을 csv로 저장한다
-        print("Thread end.")
         self.WinCamaraLabel.clear()                                 # 윈 라벨 초기화
 
     def start(self):
         self.running = True
         th = threading.Thread(target=self.run)                      # 윈폼 내 카메라 부분을 thread로 돌림
         th.start()
-        print("started..")
+        print("Thread started..")
 
     def stop(self):
         self.running = False
-        print("stoped..")        
+        print("Thread stoped..")        
 
     def onExit(self):
-        print("exit")
+        print("Program exit")
         self.stop()
         sys.exit()
 
@@ -159,6 +159,7 @@ class NewMediapipe():
                 self.data = np.array([self.angle], dtype=np.float32)
                 self.mp_drawing.draw_landmarks(img, res, self.mp_hands.HAND_CONNECTIONS)   
                 return img   
+                
         IsCamaraOn = False  
         return img
 
