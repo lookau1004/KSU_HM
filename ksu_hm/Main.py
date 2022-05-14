@@ -1,15 +1,20 @@
+from UI import *
+
 import time
-from tkinter import Frame
 import cv2
 import pyautogui
-from multiprocessing import Process,Value
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import *
-from UI import *
-from cvzone.HandTrackingModule import HandDetector
 import numpy as np
 import mediapipe as mp
 import sys
+import os
+
+from multiprocessing import Process,Value
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import *
+
+from tkinter import Frame
+from cvzone.HandTrackingModule import HandDetector
+
 
 
 global GlobalMainDict                           # 딕서녀리 전역 변수
@@ -20,9 +25,12 @@ gesture = {
 
 gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', 11: 'exit'}
 
+
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
-        self.DefaultTimerNum = 10
+        self.DefaultTimerNum = 10                                                                   # 기본 타이머 값
+        self.DefaultPath = os.path.abspath(__file__)                                                # 현재 py 파일 경로
+        self.CsvFilePath = self.DefaultPath.replace("Main.py","Data\\gesture_train.csv")            # csv 파일 경로
     
     def Clear(self):
         self.DefaultTimerNum = 0
@@ -71,10 +79,11 @@ class newTimer():                                                               
 
 class newCamara():                                                                        # 카메라 클래스 ( 카메라 관련 함수 )
     def __init__(self,DefaultSecond,sharedNum):
+        self.configDataClass = ConfigData()                                                 # 데이터 클래스 생성
         self.pTimer = Process(target = newTimer, name = "TimerProcess", args=(DefaultSecond,sharedNum,))        # 카메라 프로세스가 종료 했을때 타이머 프로세스도 종료 해야하므로 내부에서 선언
         self.pTimer.start()
         self.CamaraOpen(DefaultSecond,sharedNum)
-
+       
     def CamaraOpen(self,DefaultSecond,sharedNum):                                       # 카메라 메인 함수
         mp_hands = mp.solutions.hands
         mp_drawing = mp.solutions.drawing_utils                                              # numpy hands
@@ -85,9 +94,9 @@ class newCamara():                                                              
 
         detector = HandDetector(maxHands=1)
 
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
-        file = np.genfromtxt('./ksu_hm/Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
+        file = np.genfromtxt(self.configDataClass.CsvFilePath, delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
 
@@ -99,13 +108,10 @@ class newCamara():                                                              
         gesture_n_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
         gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
 
-        while cap.isOpened():
-            
+        while cap.isOpened():            
             success, frame = cap.read()
             if success:
-                frame = cv2.flip(frame,1) # 좌우반전
-                
-                   
+                frame = cv2.flip(frame,1) # 좌우반전           
                 frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
                 result = hands.process(frame)                               # RGB값으로 바뀐 프레임에 손 모델 해석 ( 손의 위치와 관절 탐지 )
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
@@ -117,13 +123,12 @@ class newCamara():                                                              
                         joint = np.zeros((21, 3))
                         for j, lm in enumerate(res.landmark):
                             joint[j] = [lm.x, lm.y, lm.z]
-                            v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
-                            v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
+                        v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
+                        v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
                         v = v2 - v1 # [20,3]
             
                         v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
 
-            
                         angle = np.arccos(np.einsum('nt,nt->n',
                             v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:],
                             v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
@@ -187,7 +192,6 @@ class newCamara():                                                              
             if (sharedNum.value == 0):
                 break
     
-    
         cap.release()
         cv2.destroyAllWindows()
         self.pTimer.terminate()                                             # 타이머 프로세스 강제종료
@@ -202,7 +206,7 @@ if __name__ == '__main__':
     ui = ConfigWindow(mainWindow)
     mainWindow.show()
     app.exec_()
-
+    
     DefaultSecond = int(GlobalMainDict[('Config')].DefaultTimerNum)
 
     pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
