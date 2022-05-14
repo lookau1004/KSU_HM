@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'wTraining.UI'
+# Form implementation generated from reading ui file 'wTraining.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -34,14 +34,20 @@ class Ui_MainWindow(object):
         self.WinCaptureMotionBtn.setGeometry(QtCore.QRect(900, 150, 141, 41))
         self.WinCaptureMotionBtn.setObjectName("WinCaptureMotionBtn")
         self.WinIndexLabelText = QtWidgets.QLabel(self.centralwidget)
-        self.WinIndexLabelText.setGeometry(QtCore.QRect(950, 220, 54, 12))
+        self.WinIndexLabelText.setGeometry(QtCore.QRect(880, 210, 54, 12))
         self.WinIndexLabelText.setObjectName("WinIndexLabelText")
         self.WinIndexLineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.WinIndexLineEdit.setGeometry(QtCore.QRect(910, 240, 113, 20))
+        self.WinIndexLineEdit.setGeometry(QtCore.QRect(930, 200, 113, 31))
         self.WinIndexLineEdit.setObjectName("WinIndexLineEdit")
         self.WinDataListWidget = QtWidgets.QListWidget(self.centralwidget)
         self.WinDataListWidget.setGeometry(QtCore.QRect(840, 290, 256, 401))
         self.WinDataListWidget.setObjectName("WinDataListWidget")
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(850, 270, 111, 16))
+        self.label.setObjectName("label")
+        self.WinOpenFolerBtn = QtWidgets.QPushButton(self.centralwidget)
+        self.WinOpenFolerBtn.setGeometry(QtCore.QRect(980, 252, 111, 31))
+        self.WinOpenFolerBtn.setObjectName("WinOpenFolerBtn")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1136, 22))
@@ -63,6 +69,8 @@ class Ui_MainWindow(object):
         self.WinExitBtn.setText(_translate("MainWindow", "Exit"))
         self.WinCaptureMotionBtn.setText(_translate("MainWindow", "CaptureMotion"))
         self.WinIndexLabelText.setText(_translate("MainWindow", "Index"))
+        self.label.setText(_translate("MainWindow", "Saved Lines"))
+        self.WinOpenFolerBtn.setText(_translate("MainWindow", "Open Folder"))
 
 
 if __name__ == "__main__":

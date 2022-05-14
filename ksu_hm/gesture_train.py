@@ -3,6 +3,7 @@ import mediapipe as mp
 import numpy as np
 from UI import *
 
+import os
 import threading
 import sys
 from PyQt5 import QtWidgets
@@ -32,7 +33,8 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         self.WinStartBtn.clicked.connect(self.start)                 # 버튼에 start 함수 연결
         self.WinStopBtn.clicked.connect(self.stop)                   # 버튼에 stop 함수 연결
         self.WinExitBtn.clicked.connect(self.onExit)                 # 버튼에 exit 함수 연결
-        self.WinCaptureMotionBtn.clicked.connect(self.SaveMotion)    # 버튼에 저장하는 함수 연결            
+        self.WinCaptureMotionBtn.clicked.connect(self.SaveMotion)    # 버튼에 저장하는 함수 연결         
+        self.WinOpenFolerBtn.clicked.connect(self.OpenFolder)        # 버튼에 폴더 여는 함수 연결
 
     def run(self):                                                   # 스레드로 돌릴 비디오 함수 윈폼 라벨로 값을 넘겨줌
         cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
@@ -72,6 +74,10 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         print("Program exit")
         sys.exit()
 
+    def OpenFolder(self):                                          # CSV 폴더 여는 함수
+        path = os.path.realpath('./ksu_hm/Data/')
+        os.startfile(path)
+
     def CheckCamara(self):                                          # 카메라 시작/중단 여부 체크 함수
         global IsCamaraOn
         if IsCamaraOn:
@@ -98,10 +104,11 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
             print("index를 입력해주세요")
             return False
 
-    def CvtDataToString(self,ConvertString):                                                   # .shape 값을 String으로 바꿈
+    def CvtDataToString(self,ConvertString):                                                   # .shape 값을 String형으로 바꾸면서 필요한 문자열 추가
         ConvertString = ConvertString.replace(","," Total Lines")
         StringIndex = ConvertString.find(")")
         ConvertString = ConvertString[:StringIndex] + ' ea' + ConvertString[StringIndex:]
+        ConvertString += " idx %s" %self.configDataClass.IndexNumber
         return ConvertString
 
 class NewMediapipe(): 
