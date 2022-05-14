@@ -1,28 +1,25 @@
-from UI import *
 import time
+from tkinter import Frame
 import cv2
 import pyautogui
-
 from multiprocessing import Process,Value
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
-
-#from tkinter import Frame
-#from UI.Frame import func1
+from UI import *
 from cvzone.HandTrackingModule import HandDetector
-
 import numpy as np
 import mediapipe as mp
+import pywinctl as pwc
 import sys
 
 
 global GlobalMainDict                           # 딕서녀리 전역 변수
 
 gesture = {
-    0:'start', 1:'click', 2:'two', 3:'three', 4:'four', 5:'five',
-    6:'six', 7:'seve  n', 8:'eight', 9:'nine', 10:'ten',}
+    0:'start', 1:'one', 2:'two', 3:'three', 4:'four', 5:'five',
+    6:'six', 7:'seven', 8:'eight', 9:'nine', 10:'ten', 11: 'adios'}
 
-gesture_1 = {1:'click',9:'spaceBar',}
+gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', }
 
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
@@ -31,7 +28,7 @@ class ConfigData():                             # 옵션 설정 데이터들을 
     def Clear(self):
         self.DefaultTimerNum = 0
     
-class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )                                             
+class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )
     def __init__(self,mainWindow):                 # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
         self.setup_UI(mainWindow)
         super().__init__()                         # 부모 init() 실행
@@ -77,10 +74,10 @@ class newCamara():                                                              
     def __init__(self,DefaultSecond,sharedNum):
         self.pTimer = Process(target = newTimer, name = "TimerProcess", args=(DefaultSecond,sharedNum,))        # 카메라 프로세스가 종료 했을때 타이머 프로세스도 종료 해야하므로 내부에서 선언
         self.pTimer.start()
-        self.CamaraOpen(DefaultSecond,sharedNum)        
+        self.CamaraOpen(DefaultSecond,sharedNum)
 
     def CamaraOpen(self,DefaultSecond,sharedNum):                                       # 카메라 메인 함수
-        mp_hands = mp.solutions.hands     
+        mp_hands = mp.solutions.hands
         mp_drawing = mp.solutions.drawing_utils                                              # numpy hands
         hands = mp_hands.Hands(
             max_num_hands=1,
@@ -91,7 +88,7 @@ class newCamara():                                                              
 
         cap = cv2.VideoCapture(0)
 
-        file = np.genfromtxt('ksu_hm/Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
+        file = np.genfromtxt('./Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
 
@@ -100,34 +97,39 @@ class newCamara():                                                              
         
         is_Mode = False
         start_time_limit = time.time()
-        while cap.isOpened():            
+        gesture_n_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
+        gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
+        list = ['Chrome', 'Google', 'google', 'chrome', 'Internet Explorer', 'Explorer', 'explorer']
+        while cap.isOpened():
+            
             success, frame = cap.read()
-
-            if success:  
-                frame = cv2.flip(frame,1) # 좌우반전             
+            if success:
+                frame = cv2.flip(frame,1) # 좌우반전
+                
+                   
                 frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
                 result = hands.process(frame)                               # RGB값으로 바뀐 프레임에 손 모델 해석 ( 손의 위치와 관절 탐지 )
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
 
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
-                    sharedNum.value = DefaultSecond                         # 타이머 초기화                        
+                    sharedNum.value = DefaultSecond                         # 타이머 초기화
+                    
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
                         joint = np.zeros((21, 3))
                         for j, lm in enumerate(res.landmark):
                             joint[j] = [lm.x, lm.y, lm.z]
-
-                        # Compute angles between joints
-                        v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
-                        v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
-                        v = v2 - v1 # [20,3]    
-                        # Normalize v 
+                            v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
+                            v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
+                        v = v2 - v1 # [20,3]
+            
                         v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
 
+            
                         angle = np.arccos(np.einsum('nt,nt->n',
-                            v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:], 
+                            v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:],
                             v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
 
-                        angle = np.degrees(angle)                           # Convert radian to degree
+                        angle = np.degrees(angle)
 
                         data = np.array([angle], dtype=np.float32)
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
@@ -138,43 +140,82 @@ class newCamara():                                                              
                             is_Mode = True
                             start_time_limit = time.time() + 0.5
                             print('start')
-                            print('입력')      
-
-                        if idx in gesture_1.keys():
-                            mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
-                            if(idx==1) and is_Mode:
+                            print('입력')
+                        
+                        if is_Mode and idx in gesture_1.keys():
+                            gesture_n_times[idx] += 1
+                            if  (idx == 1) and gesture_n_times[idx] > 2:
                                 pyautogui.click()
                                 is_Mode = False
+                                gestrue_n_times = gesture_0_times
                                 break
-                            elif (idx == 9) and is_Mode:
+                            elif (idx == 9) and gesture_n_times[idx] > 2:
                                 pyautogui.press('space')
                                 is_Mode = False
-                                break                                                                                  
+                                gestrue_n_times = gesture_0_times
+                                break
+                            elif (idx == 3) and gesture_n_times[idx] > 2:
+                                try:
+                                    get_windows = pwc.getActiveWindow().getParent()
+                                    for str in list:
+                                        if str in get_windows:
+                                            pyautogui.hotkey('command','right')  # alt + 오른쪽 키 조합키 - 브라우저
+                                            print(str)
+                                            break
+                                        else:
+                                            pyautogui.press('right')         # 오른쪽 키 누르기 - 파워포인트
+                                except:
+                                    print("코드창임")
+                                finally:
+                                    is_Mode = False
+                                    gestrue_n_times = gesture_0_times
+                                    break
+                            elif (idx == 4) and gesture_n_times[idx] > 2:
+                                try:
+                                    get_windows = pwc.getActiveWindow().getParent()
+                                    for str in list:
+                                        if str in get_windows:
+                                            pyautogui.hotkey('command','left')   # alt + 왼쪽 키 조합키 - 브라우저
+                                            print(str)
+                                            break
+                                        else:
+                                            pyautogui.press('left')           # 왼쪽 키 누르기 - 파워포인트
+                                except:
+                                    print("코드창임")
+                                finally:
+                                    is_Mode = False
+                                    gestrue_n_times = gesture_0_times
+                                    break
+                            elif (idx == 11) and gesture_n_times[idx] > 2:
+                                sharedNum.value = 0
+                                break
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
 
                 if start_time_limit < time.time():
                     is_Mode = False
+                    gestrue_n_times = gesture_0_times
                     cv2.putText(frame, f'',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,(255,0,0),2)
-
                 if(is_Mode):                                                                        # 입력 모드 체크
-                    cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(255,0,0),2)
-
-                cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(255,0,0),2)
+                    cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
+                        1,(255,0,0),2)
+                cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
+                    1,(255,0,0),2)
                 cv2.imshow('Camera Window', frame)
 
-            if cv2.waitKey(1) == 27: 
+            if cv2.waitKey(1) == 27:
                 break
            
             if (sharedNum.value == 0):
                 break
-
+    
+    
         cap.release()
         cv2.destroyAllWindows()
         self.pTimer.terminate()                                             # 타이머 프로세스 강제종료
 
 if __name__ == '__main__':
 
-    GlobalMainDict = {}                                                     
+    GlobalMainDict = {}
     sharedNum = Value('i')                                                  # 프로세스간에 데이터 공유를 위해 Value를 이용하여 공유 메모리 맵 사용
 
     app = QtWidgets.QApplication(sys.argv)                                  # PyQT5 메인 윈도우 클래스 생성 부분
