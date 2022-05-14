@@ -1,7 +1,8 @@
+from UI import *
 import cv2
 import mediapipe as mp
 import numpy as np
-from UI import *
+
 
 import os
 import threading

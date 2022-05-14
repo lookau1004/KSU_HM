@@ -1,14 +1,10 @@
-from UI import *
 import time
 import cv2
 import pyautogui
-
 from multiprocessing import Process,Value
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
-
-#from tkinter import Frame
-#from UI.Frame import func1
+from UI import *
 from cvzone.HandTrackingModule import HandDetector
 
 import numpy as np
@@ -88,80 +84,97 @@ class newCamara():                                                              
             min_tracking_confidence=0.5)  # 추적 임계치
 
         detector = HandDetector(maxHands=1)
-
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 
         file = np.genfromtxt('ksu_hm/Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
 
         knn =cv2.ml.KNearest_create() #KNN 모델 초기화
-        knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습
-        
-        is_Mode = False
-        start_time_limit = time.time()
-        while cap.isOpened():            
+        knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습        
+      
+        while cap.isOpened():
+            is_Mode = False                                                 #입력 모드를 확인하기 위한 변수
             success, frame = cap.read()
-
             if success:  
-                frame = cv2.flip(frame,1) # 좌우반전             
+                frame = cv2.flip(frame,1) # 좌우반전           
                 frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
                 result = hands.process(frame)                               # RGB값으로 바뀐 프레임에 손 모델 해석 ( 손의 위치와 관절 탐지 )
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
 
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
-                    sharedNum.value = DefaultSecond                         # 타이머 초기화                        
+                    sharedNum.value = DefaultSecond                         # 타이머 초기화     
+                    
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
                         joint = np.zeros((21, 3))
                         for j, lm in enumerate(res.landmark):
                             joint[j] = [lm.x, lm.y, lm.z]
-
-                        # Compute angles between joints
-                        v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
-                        v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
-                        v = v2 - v1 # [20,3]    
-                        # Normalize v 
+                            v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
+                            v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
+                        v = v2 - v1 # [20,3]
+            
                         v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
 
                         angle = np.arccos(np.einsum('nt,nt->n',
                             v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:], 
                             v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
 
-                        angle = np.degrees(angle)                           # Convert radian to degree
+                        angle = np.degrees(angle) 
 
                         data = np.array([angle], dtype=np.float32)
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
                         idx = int(results[0][0])
                         print(idx)
-
                         if(idx == 0) : # 시작 제스처일 경우
                             is_Mode = True
-                            start_time_limit = time.time() + 0.5
                             print('start')
-                            print('입력')      
+                            print('입력')
+                            
+                            success, frame = cap.read()
+                            if success: 
+                                frame = cv2.flip(frame,1)   # 거울반전
+                                frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
+                                result = hands.process(frame)                               # RGB값으로 바뀐 프레임에 손 모델 해석 ( 손의 위치와 관절 탐지 )
+                                frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
 
-                        if idx in gesture_1.keys():
-                            mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
-                            if(idx==1) and is_Mode:
-                                pyautogui.click()
-                                is_Mode = False
-                                break
-                            elif (idx == 9) and is_Mode:
-                                pyautogui.press('space')
-                                is_Mode = False
-                                break                                                                                  
+                                if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
+                                    for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
+                                        joint = np.zeros((21, 3))
+                                    for j, lm in enumerate(res.landmark):
+                                        joint[j] = [lm.x, lm.y, lm.z]
+                                        v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
+                                        v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
+                                        v = v2 - v1 # [20,3]
+            
+                                        v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
+            
+                                        angle = np.arccos(np.einsum('nt,nt->n',
+                                        v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:], 
+                                        v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
+
+                                        angle = np.degrees(angle) 
+
+                                        data = np.array([angle], dtype=np.float32)
+                                        ret, results, neighbours, dist = knn.findNearest(data, 3)
+                                        idx = int(results[0][0])
+                                        print(idx)
+                                        if idx in gesture_1.keys():
+                                            mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.  
+                                            if(idx == 1): 
+                                                pyautogui.click()
+                                                break
+                                            elif (idx == 9): 
+                                                pyautogui.press('space')
+                                                break
+                                                                                   
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
-
-                if start_time_limit < time.time():
-                    is_Mode = False
-                    cv2.putText(frame, f'',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,(255,0,0),2)
-
                 if(is_Mode):                                                                        # 입력 모드 체크
-                    cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(255,0,0),2)
-
-                cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(255,0,0),2)
+                    cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                        1,(255,0,0),2)
+                cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                    1,(255,0,0),2)
                 cv2.imshow('Camera Window', frame)
-
+            
             if cv2.waitKey(1) == 27: 
                 break
            
