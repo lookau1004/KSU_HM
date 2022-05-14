@@ -9,7 +9,6 @@ from UI import *
 from cvzone.HandTrackingModule import HandDetector
 import numpy as np
 import mediapipe as mp
-import pywinctl as pwc
 import sys
 
 
@@ -19,7 +18,7 @@ gesture = {
     0:'start', 1:'one', 2:'two', 3:'three', 4:'four', 5:'five',
     6:'six', 7:'seven', 8:'eight', 9:'nine', 10:'ten', 11: 'adios'}
 
-gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', }
+gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', 11: 'exit'}
 
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
@@ -88,7 +87,7 @@ class newCamara():                                                              
 
         cap = cv2.VideoCapture(0)
 
-        file = np.genfromtxt('./Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
+        file = np.genfromtxt('./ksu_hm/Data/gesture_train.csv', delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
 
@@ -99,7 +98,7 @@ class newCamara():                                                              
         start_time_limit = time.time()
         gesture_n_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
         gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
-        list = ['Chrome', 'Google', 'google', 'chrome', 'Internet Explorer', 'Explorer', 'explorer']
+
         while cap.isOpened():
             
             success, frame = cap.read()
@@ -155,37 +154,17 @@ class newCamara():                                                              
                                 gestrue_n_times = gesture_0_times
                                 break
                             elif (idx == 3) and gesture_n_times[idx] > 2:
-                                try:
-                                    get_windows = pwc.getActiveWindow().getParent()
-                                    for str in list:
-                                        if str in get_windows:
-                                            pyautogui.hotkey('command','right')  # alt + 오른쪽 키 조합키 - 브라우저
-                                            print(str)
-                                            break
-                                        else:
-                                            pyautogui.press('right')         # 오른쪽 키 누르기 - 파워포인트
-                                except:
-                                    print("코드창임")
-                                finally:
-                                    is_Mode = False
-                                    gestrue_n_times = gesture_0_times
-                                    break
+                                pyautogui.hotkey('command','right')  # alt + 오른쪽 키 조합키 - 브라우저
+                                pyautogui.press('right')         # 오른쪽 키 누르기 - 파워포인트
+                                is_Mode = False
+                                gestrue_n_times = gesture_0_times
+                                break
                             elif (idx == 4) and gesture_n_times[idx] > 2:
-                                try:
-                                    get_windows = pwc.getActiveWindow().getParent()
-                                    for str in list:
-                                        if str in get_windows:
-                                            pyautogui.hotkey('command','left')   # alt + 왼쪽 키 조합키 - 브라우저
-                                            print(str)
-                                            break
-                                        else:
-                                            pyautogui.press('left')           # 왼쪽 키 누르기 - 파워포인트
-                                except:
-                                    print("코드창임")
-                                finally:
-                                    is_Mode = False
-                                    gestrue_n_times = gesture_0_times
-                                    break
+                                pyautogui.hotkey('command','left')   # alt + 왼쪽 키 조합키 - 브라우저
+                                pyautogui.press('left')           # 왼쪽 키 누르기 - 파워포인트
+                                is_Mode = False
+                                gestrue_n_times = gesture_0_times
+                                break
                             elif (idx == 11) and gesture_n_times[idx] > 2:
                                 sharedNum.value = 0
                                 break
