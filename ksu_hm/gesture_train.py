@@ -17,6 +17,9 @@ CamaraLoopOn = False                                   # 스레드 시작/종료
 class ConfigData():                                    # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):      
         self.IndexNumber = None                        # 윈폼에서 가져오는 Index 넘버
+        self.DefaultPath = os.path.abspath(__file__)                                                        # 현재 py 파일 경로
+        self.CsvFilePath = self.DefaultPath.replace("gesture_train.py","Data/gesture_train.csv")            # csv 파일 경로
+        self.DataFolderPath = self.DefaultPath.replace("gesture_train.py","Data/")                          # Data 폴더 경로
     
     def Clear(self):
         self.IndexNumber = None
@@ -96,8 +99,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         sys.exit()
 
     def OpenFolder(self):                                               # CSV 폴더 여는 함수
-        path = os.path.realpath((os.path.abspath(__file__)).replace("gesture_train.py","Data/"))
-        os.startfile(path)
+        os.startfile(self.configDataClass.DataFolderPath)
 
     def CheckCaptureMotionBtn(self):                                          # 카메라 시작/중단 여부 체크 함수
         global IsGetHand
@@ -134,6 +136,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
 
 class NewMediapipe(): 
     def __init__(self):    
+        self.configDataClass = ConfigData()           # 데이터 클래스 생성
         self.max_num_hands = 1        
         self.gesture = {
             0:'fist', 1:'one', 2:'two', 3:'three', 4:'four', 5:'five',
@@ -146,7 +149,7 @@ class NewMediapipe():
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5)
         
-        self.file = np.genfromtxt('ksu_hm/Data/gesture_train.csv', delimiter=',')
+        self.file = np.genfromtxt(self.configDataClass.CsvFilePath, delimiter=',')
     
     def StackToNp(self,IndexData):
         self.data = np.append(self.data, int(IndexData))
@@ -155,7 +158,7 @@ class NewMediapipe():
     
     def SaveFileToCsv(self):      
         try:  
-            np.savetxt('ksu_hm/Data/new_gesture_train.csv', self.file, fmt='%f',delimiter=',')
+            np.savetxt(self.configDataClass.DataFolderPath + "new_gesture_train.csv", self.file, fmt='%f',delimiter=',')
             print("CSV 파일로 저장되었습니다")
         except:
             print("저장에서 에러가 발생했습니다")
