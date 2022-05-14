@@ -124,13 +124,15 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
     def SaveMotion(self):                                                                      # 저장 버튼을 누르면 작동하는 함수 MediaPipe 클래스 안에 스택 함수를 사용
         if self.input_index_data():                                                            # 문자열에 값이 있다면~
             try:
-                if int(self.configDataClass.IndexNumber):                                      # int형으로 변환 할 수 있는 문자열이면~
+                if (int(self.configDataClass.IndexNumber) or int(self.configDataClass.IndexNumber == 0)) and (int(self.configDataClass.IndexNumber) > 0) :                                      # int형으로 변환 할 수 있는 문자열이면~
                     DataLinesInfo = self.newMP.StackToNp(self.configDataClass.IndexNumber)     # NP 스택에 저장하고 File.shape 반환
                     StringLinesInfo = self.CvtDataToString(str(DataLinesInfo))                 # 반환된 값을 원하는 문자열 추가 후 String 형태로 변환
                     self.WinDataListWidget.insertItem(0,StringLinesInfo)                       # 윈폼 ListWidget에 아이템 추가
                     print("Motion 값이 저장되었습니다")
+                else :
+                    print("index란에 숫자를 입력해주세요")
             except:
-                print("index란에 숫자를 입력해주세요")
+                print("index에서 에러가 발생했습니다")
 
     def input_index_data(self):                                                                 # 윈폼에 textline에 적힌 index 문자열 값을 가져오는 함수
         if self.WinIndexLineEdit.text() != '':                                                  # 문자열이 비어있지 않다면~
