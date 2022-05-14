@@ -10,14 +10,20 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 
-IsCamaraOn = False                                # 카메라가 켜져있는지 표시하는 Bool 변수
-
-class ConfigData():                               # 옵션 설정 데이터들을 클래스 형태로 정리
+IsGetHand = False                                      # 카메라에 손이 보이는지 구별하는 Bool 변수
+CamaraLoopOn = False                                   # 스레드 시작/종료 구별하는 Bool 변수  
+ 
+class ConfigData():                                    # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):      
-        self.IndexNumber = None                   # 윈폼에서 가져오는 Index 넘버
+        self.IndexNumber = None                        # 윈폼에서 가져오는 Index 넘버
     
     def Clear(self):
         self.IndexNumber = None
+        
+class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 클래스의 closeEvent를 오버라이딩하기 위해서 클래스 생성
+    def closeEvent(self,event):
+        global CamaraLoopOn
+        CamaraLoopOn = False
 
 class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )                                             
     def __init__(self,mainWindow):                    # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
@@ -26,7 +32,8 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         self.configDict = {}                          # 딕셔너리 생성
         self.configDataClass = ConfigData()           # 데이터 클래스 생성
         self.newMP = NewMediapipe()                   # MP 클래스 생성
-        self.running = False                          # 시작/종료 구별하는 값    
+        self.isThreadStarted = False                  # 스레스 중복 실행 방지용 변수
+        self.isStop = False                           # exit했을때 저장하지 않기 위한 변수
         
     def setup_UI(self,mainWindow):                                   # 윈도우 UI 생성 부분
         self.setupUi(mainWindow)                                     # PyQT5(Window.py)의 setup Ui() 실행
@@ -36,19 +43,20 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         self.WinCaptureMotionBtn.clicked.connect(self.SaveMotion)    # 버튼에 저장하는 함수 연결         
         self.WinOpenFolerBtn.clicked.connect(self.OpenFolder)        # 버튼에 폴더 여는 함수 연결
 
-    def run(self):                                                   # 스레드로 돌릴 비디오 함수 윈폼 라벨로 값을 넘겨줌
+    def run(self):                                                   # 스레드로 돌릴 비디오 루프 함수 // 윈폼 라벨로 값을 넘겨 카메라를 보여줌
+        global CamaraLoopOn                                              
         cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.WinCamaraLabel.resize(width, height)                    # 윈폼 라벨을 카메라 사이즈에 맞게 조정 width,height는 int형
+        self.WinCamaraLabel.resize(width, height)                        # 윈폼 라벨을 카메라 사이즈에 맞게 조정 width,height는 int형
 
-        while self.running:
-            ret, img = cap.read()
-            if ret:
-                self.CheckCamara()
-                img = self.newMP.GraphicWithMp(img)                  #MediaPipe 클래스 내에 있는 관절을 그려주는 함수로 값을 주고 받음
-                h,w,c = img.shape
-                qImg = QtGui.QImage(img.data, w, h, w*c, QtGui.QImage.Format_RGB888)
+        while CamaraLoopOn:
+            success, frame = cap.read()
+            if success:
+                self.CheckCaptureMotionBtn()
+                frame = self.newMP.GraphicWithMp(frame)                  #MediaPipe 클래스 내에 있는 관절을 그려주는 함수로 값을 주고 받음
+                h,w,c = frame.shape
+                qImg = QtGui.QImage(frame.data, w, h, w*c, QtGui.QImage.Format_RGB888)
                 pixmap = QtGui.QPixmap.fromImage(qImg)
                 self.WinCamaraLabel.setPixmap(pixmap)
             else:
@@ -56,31 +64,43 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
                 break
 
         cap.release()
-        self.newMP.SaveFileToCsv()                                  # 루프에서 나오면 저장된 모션 값을 csv로 저장한다
-        self.WinCamaraLabel.clear()                                 # 윈 라벨 초기화
+        if self.isStop:
+            self.newMP.SaveFileToCsv()                                   # 루프에서 나오면 저장된 모션 값을 csv로 저장한다
+        self.WinCamaraLabel.clear()                                      # 윈 라벨 초기화
+        self.isStop = False
 
     def start(self):
-        self.running = True
-        th = threading.Thread(target=self.run)                      # 윈폼 내 카메라 부분을 thread로 돌림
-        th.start()
-        print("Thread started..")
+        global CamaraLoopOn
+        if not self.isThreadStarted:                                    # 작동중인 스레드가 없으면~
+            CamaraLoopOn = True                                         # 카메라 루프를 돌려도 된다
+            th = threading.Thread(target=self.run)                      # 윈폼 내 카메라 부분을 thread로 돌림
+            th.start()
+            self.isThreadStarted = True                                 # 스레드 작동중
+            print("Thread started..")
 
     def stop(self):
-        self.running = False
+        global CamaraLoopOn
+        global IsGetHand
+        self.isStop = True                                              # stop을 눌러서 저장을 할것인가
+        self.isThreadStarted = False                                    # stop 버튼을 누르면 작동중인 스레드가 없어질테니
+        CamaraLoopOn = False                                            # 카메라 루프 탈출하고 (스레드가 무한루프에서 나옴)
+        IsGetHand = False                                               # 혹시 손이 잡힌 상태로 stop을 눌렀다면 강제로 체크용 bool 값을 바꾸고
+        self.CheckCaptureMotionBtn()                                    # CaptionMotion 버튼의 활성화/비활성화를 isGetHand에 따라 바꾼다
         print("Thread stoped..")        
 
     def onExit(self):
-        self.stop()
+        global CamaraLoopOn
+        CamaraLoopOn = False                                            # 스레드를 무한루프에서 종료해야 프로그렘이 종료된다
         print("Program exit")
         sys.exit()
 
-    def OpenFolder(self):                                          # CSV 폴더 여는 함수
+    def OpenFolder(self):                                               # CSV 폴더 여는 함수
         path = os.path.realpath('./ksu_hm/Data/')
         os.startfile(path)
 
-    def CheckCamara(self):                                          # 카메라 시작/중단 여부 체크 함수
-        global IsCamaraOn
-        if IsCamaraOn:
+    def CheckCaptureMotionBtn(self):                                          # 카메라 시작/중단 여부 체크 함수
+        global IsGetHand
+        if IsGetHand:
             self.WinCaptureMotionBtn.setEnabled(True)
         else :            
             self.WinCaptureMotionBtn.setEnabled(False)
@@ -140,13 +160,13 @@ class NewMediapipe():
             print("저장에서 에러가 발생했습니다")
         
     def GraphicWithMp(self,img):        
-        global IsCamaraOn
+        global IsGetHand
         img = cv2.flip(img, 1)    
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
         result = self.hands.process(img)
 
         if result.multi_hand_landmarks is not None:
-            IsCamaraOn = True
+            IsGetHand = True
             for res in result.multi_hand_landmarks:
                 joint = np.zeros((21, 3))
                 for j, lm in enumerate(res.landmark):
@@ -170,11 +190,11 @@ class NewMediapipe():
                 self.mp_drawing.draw_landmarks(img, res, self.mp_hands.HAND_CONNECTIONS)   
                 return img   
 
-        IsCamaraOn = False  
+        IsGetHand = False  
         return img
 
 app = QtWidgets.QApplication(sys.argv)                                  # PyQT5 메인 윈도우 클래스 생성 부분
-mainWindow = QtWidgets.QMainWindow()
+mainWindow = NewMainWindow()
 ui = ConfigWindow(mainWindow)
 mainWindow.show()
 app.exec_()
