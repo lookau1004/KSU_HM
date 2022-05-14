@@ -51,7 +51,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
 
     def run(self):                                                   # 스레드로 돌릴 비디오 루프 함수 // 윈폼 라벨로 값을 넘겨 카메라를 보여줌
         global CamaraLoopOn                                              
-        cap = cv2.VideoCapture(0)
+        cap =cv2.VideoCapture(0,cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.configDataClass.CamaraHeight)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
