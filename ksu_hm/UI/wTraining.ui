@@ -67,6 +67,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="WinCaptureMotionBtn">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>900</x>
@@ -99,6 +102,16 @@
       <y>240</y>
       <width>113</width>
       <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="WinDataListWidget">
+    <property name="geometry">
+     <rect>
+      <x>840</x>
+      <y>290</y>
+      <width>256</width>
+      <height>401</height>
      </rect>
     </property>
    </widget>

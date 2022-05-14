@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'wTraining.ui'
+# Form implementation generated from reading ui file 'wTraining.UI'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -30,6 +30,7 @@ class Ui_MainWindow(object):
         self.WinExitBtn.setGeometry(QtCore.QRect(930, 110, 75, 23))
         self.WinExitBtn.setObjectName("WinExitBtn")
         self.WinCaptureMotionBtn = QtWidgets.QPushButton(self.centralwidget)
+        self.WinCaptureMotionBtn.setEnabled(False)
         self.WinCaptureMotionBtn.setGeometry(QtCore.QRect(900, 150, 141, 41))
         self.WinCaptureMotionBtn.setObjectName("WinCaptureMotionBtn")
         self.WinIndexLabelText = QtWidgets.QLabel(self.centralwidget)
@@ -38,6 +39,9 @@ class Ui_MainWindow(object):
         self.WinIndexLineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.WinIndexLineEdit.setGeometry(QtCore.QRect(910, 240, 113, 20))
         self.WinIndexLineEdit.setObjectName("WinIndexLineEdit")
+        self.WinDataListWidget = QtWidgets.QListWidget(self.centralwidget)
+        self.WinDataListWidget.setGeometry(QtCore.QRect(840, 290, 256, 401))
+        self.WinDataListWidget.setObjectName("WinDataListWidget")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1136, 22))
