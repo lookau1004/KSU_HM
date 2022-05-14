@@ -3,10 +3,10 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-
 import os
 import threading
 import sys
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
