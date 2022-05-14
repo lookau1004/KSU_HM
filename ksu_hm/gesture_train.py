@@ -20,6 +20,8 @@ class ConfigData():                                    # 옵션 설정 데이터
         self.DefaultPath = os.path.abspath(__file__)                                                        # 현재 py 파일 경로
         self.CsvFilePath = self.DefaultPath.replace("gesture_train.py","Data/gesture_train.csv")            # csv 파일 경로
         self.DataFolderPath = self.DefaultPath.replace("gesture_train.py","Data/")                          # Data 폴더 경로
+        self.CamaraWidth = 640
+        self.CamaraHeight = 480
     
     def Clear(self):
         self.IndexNumber = None
@@ -49,7 +51,9 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
 
     def run(self):                                                   # 스레드로 돌릴 비디오 루프 함수 // 윈폼 라벨로 값을 넘겨 카메라를 보여줌
         global CamaraLoopOn                                              
-        cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.configDataClass.CamaraHeight)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.WinCamaraLabel.resize(width, height)                        # 윈폼 라벨을 카메라 사이즈에 맞게 조정 width,height는 int형
@@ -101,9 +105,10 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
     def OpenFolder(self):                                               # CSV 폴더 여는 함수
         if sys.platform == "win32":
             os.startfile(self.configDataClass.DataFolderPath)
-        else:
+        else:                                               
             opener = "open" if sys.platform == "darwin" else "xdg-open"
             subprocess.call([opener, self.configDataClass.DataFolderPath])
+
     def CheckCaptureMotionBtn(self):                                          # 카메라 시작/중단 여부 체크 함수
         global IsGetHand
         if IsGetHand:
