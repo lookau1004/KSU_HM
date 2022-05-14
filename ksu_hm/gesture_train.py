@@ -96,7 +96,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         sys.exit()
 
     def OpenFolder(self):                                               # CSV 폴더 여는 함수
-        path = os.path.realpath('./ksu_hm/Data/')
+        path = os.path.realpath((os.path.abspath(__file__)).replace("gesture_train.py","Data/"))
         os.startfile(path)
 
     def CheckCaptureMotionBtn(self):                                          # 카메라 시작/중단 여부 체크 함수
