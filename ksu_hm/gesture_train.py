@@ -1,3 +1,6 @@
+
+from glob import glob
+from typing import List
 from UI import *
 import cv2
 import mediapipe as mp
@@ -6,25 +9,62 @@ import os, sys, subprocess
 import os
 import threading
 import sys
+import re
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 
-IsGetHand = False                                      # 카메라에 손이 보이는지 구별하는 Bool 변수
-CamaraLoopOn = False                                   # 스레드 시작/종료 구별하는 Bool 변수  
+IsGetHand = False                                       # 카메라에 손이 보이는지 구별하는 Bool 변수
+CamaraLoopOn = False                                    # 스레드 시작/종료 구별하는 Bool 변수  
+IndexNumber = None                                      # 윈폼에서 가져오는 Index 넘버
  
-class ConfigData():                                    # 옵션 설정 데이터들을 클래스 형태로 정리
+class ConfigData():                                                                                        # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):      
-        self.IndexNumber = None                        # 윈폼에서 가져오는 Index 넘버
-        self.DefaultPath = os.path.abspath(__file__)                                                        # 현재 py 파일 경로
-        self.CsvFilePath = self.DefaultPath.replace("gesture_train.py","Data/gesture_train.csv")            # csv 파일 경로
+        self.DefaultPath = os.path.abspath(__file__)                                                        # 현재 py 파일 경로        
         self.DataFolderPath = self.DefaultPath.replace("gesture_train.py","Data/")                          # Data 폴더 경로
+        self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"                                        # csv 파일 경로
+        self.TextFilePath = self.DataFolderPath + "labels.txt"                                              # labels 파일 경로
         self.CamaraWidth = 640
         self.CamaraHeight = 480
+        self.LabelNameDict = {}
     
     def Clear(self):
-        self.IndexNumber = None
+        self.CamaraWidth = 640
+        self.CamaraHeight = 480
+
+class TextFile():
+    def __init__(self):
+        self.configDataClass = ConfigData()      
+
+    def SaveTextFile(self):
+        TxtFile = open(self.configDataClass.TextFilePath,"a")                                               # Append
+        while True:
+            line = TxtFile.readline()
+            if not line:
+                break
+            print(line)
+        TxtFile.close()
+        
+    def LoadTextFile(self):     
+        i = 0   
+        file = open(self.configDataClass.TextFilePath,"r",encoding="utf-8")
+        while True:
+            line = file.readline()
+            if not line:
+                break            
+            _str = line.replace(":","")                                                                  # : 삭제
+            _str = re.sub(r"[0-9]","",_str)                                                              # 정규식으로 숫자 삭제            
+            _str = _str.strip()                                                                          # 개행 삭제
+            self.configDataClass.LabelNameDict[i] = _str
+            i += 1
+        file.close()
+        try :
+            if self.configDataClass.LabelNameDict.get(int(IndexNumber)):                                 # 저장한 딕셔너리에 IndexNumber 값이 있다면~
+                print("성공")
+                return (self.configDataClass.LabelNameDict[int(IndexNumber)])                            # 해당하는 딕셔너리 값을 반환
+        except:
+            return None
         
 class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 클래스의 closeEvent를 오버라이딩하기 위해서 클래스 생성
     def closeEvent(self,event):
@@ -33,25 +73,28 @@ class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 
 
 class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )                                             
     def __init__(self,mainWindow):                    # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
+        self.configDataClass = ConfigData()           # 데이터 클래스 생성
+        self.newMPClass = NewMediapipe()              # MP 클래스 생성     
+        self.TextFileClass = TextFile()               # TextFile 클래스
         super().__init__()                            # 부모 init() 실행
         self.setup_UI(mainWindow)        
         self.configDict = {}                          # 딕셔너리 생성
-        self.configDataClass = ConfigData()           # 데이터 클래스 생성
-        self.newMP = NewMediapipe()                   # MP 클래스 생성
         self.isThreadStarted = False                  # 스레스 중복 실행 방지용 변수
         self.isStop = False                           # exit했을때 저장하지 않기 위한 변수
+        self.LabelName = ""
         
     def setup_UI(self,mainWindow):                                   # 윈도우 UI 생성 부분
         self.setupUi(mainWindow)                                     # PyQT5(Window.py)의 setup Ui() 실행
-        self.WinStartBtn.clicked.connect(self.start)                 # 버튼에 start 함수 연결
-        self.WinStopBtn.clicked.connect(self.stop)                   # 버튼에 stop 함수 연결
+        self.WinStartBtn.clicked.connect(self.onStart)                 # 버튼에 start 함수 연결
+        self.WinStopBtn.clicked.connect(self.onStop)                   # 버튼에 stop 함수 연결
         self.WinExitBtn.clicked.connect(self.onExit)                 # 버튼에 exit 함수 연결
         self.WinCaptureMotionBtn.clicked.connect(self.SaveMotion)    # 버튼에 저장하는 함수 연결         
         self.WinOpenFolerBtn.clicked.connect(self.OpenFolder)        # 버튼에 폴더 여는 함수 연결
+        self.WinLoadTextFileBtn.clicked.connect(self.LoadIndexWithDict)
 
     def run(self):                                                   # 스레드로 돌릴 비디오 루프 함수 // 윈폼 라벨로 값을 넘겨 카메라를 보여줌
+        global CamaraLoopOn 
 
-        global CamaraLoopOn   
         if sys.platform == "win32":
             cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
@@ -66,8 +109,8 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         while CamaraLoopOn:
             success, frame = cap.read()
             if success:
-                self.CheckCaptureMotionBtn()
-                frame = self.newMP.GraphicWithMp(frame)                  #MediaPipe 클래스 내에 있는 관절을 그려주는 함수로 값을 주고 받음
+                self.CheckCaptureMotion()
+                frame = self.newMPClass.GraphicWithMp(frame)                  #MediaPipe 클래스 내에 있는 관절을 그려주는 함수로 값을 주고 받음
                 h,w,c = frame.shape
                 qImg = QtGui.QImage(frame.data, w, h, w*c, QtGui.QImage.Format_RGB888)
                 pixmap = QtGui.QPixmap.fromImage(qImg)
@@ -78,11 +121,11 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
 
         cap.release()
         if self.isStop:
-            self.newMP.SaveFileToCsv()                                   # 루프에서 나오면 저장된 모션 값을 csv로 저장한다
+            self.newMPClass.SaveFileToCsv()                                   # 루프에서 나오면 저장된 모션 값을 csv로 저장한다
         self.WinCamaraLabel.clear()                                      # 윈 라벨 초기화
         self.isStop = False
 
-    def start(self):
+    def onStart(self):
         global CamaraLoopOn
         if not self.isThreadStarted:                                    # 작동중인 스레드가 없으면~
             CamaraLoopOn = True                                         # 카메라 루프를 돌려도 된다
@@ -91,14 +134,14 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
             self.isThreadStarted = True                                 # 스레드 작동중
             print("Thread started..")
 
-    def stop(self):
+    def onStop(self):
         global CamaraLoopOn
         global IsGetHand
         self.isStop = True                                              # stop을 눌러서 저장을 할것인가
         self.isThreadStarted = False                                    # stop 버튼을 누르면 작동중인 스레드가 없어질테니
         CamaraLoopOn = False                                            # 카메라 루프 탈출하고 (스레드가 무한루프에서 나옴)
         IsGetHand = False                                               # 혹시 손이 잡힌 상태로 stop을 눌렀다면 강제로 체크용 bool 값을 바꾸고
-        self.CheckCaptureMotionBtn()                                    # CaptionMotion 버튼의 활성화/비활성화를 isGetHand에 따라 바꾼다
+        self.CheckCaptureMotion()                                    # CaptionMotion 버튼의 활성화/비활성화를 isGetHand에 따라 바꾼다
         print("Thread stoped..")        
 
     def onExit(self):
@@ -114,18 +157,24 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
             opener = "open" if sys.platform == "darwin" else "xdg-open"
             subprocess.call([opener, self.configDataClass.DataFolderPath])
 
-    def CheckCaptureMotionBtn(self):                                          # 카메라 시작/중단 여부 체크 함수
+    def CheckCaptureMotion(self):                                          # 카메라 시작/중단 여부 체크 함수
         global IsGetHand
         if IsGetHand:
             self.WinCaptureMotionBtn.setEnabled(True)
         else :            
             self.WinCaptureMotionBtn.setEnabled(False)
 
-    def SaveMotion(self):                                                                      # 저장 버튼을 누르면 작동하는 함수 MediaPipe 클래스 안에 스택 함수를 사용
+    def LoadIndexWithDict(self):
+        if self.input_index_data():
+            self.LabelName = self.TextFileClass.LoadTextFile()
+            self.WinTextLabelEdit.setText(self.LabelName)
+
+    def SaveMotion(self): 
+        global IndexNumber                                                                     # 저장 버튼을 누르면 작동하는 함수 MediaPipe 클래스 안에 스택 함수를 사용
         if self.input_index_data():                                                            # 문자열에 값이 있다면~
             try:
-                if  not int(self.configDataClass.IndexNumber) < 0 :                            # int형으로 변환 할 수 있는 문자열이면~   // 0을 넣으면 0<0 = False -> True // -1를 넣으면 True -> False
-                    DataLinesInfo = self.newMP.StackToNp(self.configDataClass.IndexNumber)     # NP 스택에 저장하고 File.shape 반환
+                if  not int(IndexNumber) < 0 :                            # int형으로 변환 할 수 있는 문자열이면~   // 0을 넣으면 0<0 = False -> True // -1를 넣으면 True -> False
+                    DataLinesInfo = self.newMPClass.StackToNp(IndexNumber)     # NP 스택에 저장하고 File.shape 반환
                     StringLinesInfo = self.CvtDataToString(str(DataLinesInfo))                 # 반환된 값을 원하는 문자열 추가 후 String 형태로 변환
                     self.WinDataListWidget.insertItem(0,StringLinesInfo)                       # 윈폼 ListWidget에 아이템 추가
                     print("Motion 값이 저장되었습니다")
@@ -134,19 +183,21 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
             except:
                 print("index에서 에러가 발생했습니다")
 
-    def input_index_data(self):                                                                 # 윈폼에 textline에 적힌 index 문자열 값을 가져오는 함수
+    def input_index_data(self):    
+        global IndexNumber                                                             # 윈폼에 textline에 적힌 index 문자열 값을 가져오는 함수
         if self.WinIndexLineEdit.text() != '':                                                  # 문자열이 비어있지 않다면~
-            self.configDataClass.IndexNumber = self.WinIndexLineEdit.text()
+            IndexNumber = self.WinIndexLineEdit.text()
             return True
         else:
             print("index를 입력해주세요")
             return False
 
-    def CvtDataToString(self,ConvertString):                                                   # .shape 값을 String형으로 바꾸면서 필요한 문자열 추가
+    def CvtDataToString(self,ConvertString):     
+        global IndexNumber                                                               # .shape 값을 String형으로 바꾸면서 필요한 문자열 추가
         ConvertString = ConvertString.replace(","," Total Lines")
         StringIndex = ConvertString.find(")")
         ConvertString = ConvertString[:StringIndex] + ' ea' + ConvertString[StringIndex:]
-        ConvertString += " idx %s" %self.configDataClass.IndexNumber
+        ConvertString += " idx %s" %IndexNumber
         return ConvertString
 
 class NewMediapipe(): 
