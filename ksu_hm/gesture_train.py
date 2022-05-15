@@ -41,7 +41,6 @@ class TextFile():
         i = 0
         _str = ""
         self.LoadTextFile()
-        print(len(self.configDataClass.LabelNameDict))
         while True:
             if i >= len(self.configDataClass.LabelNameDict):                                                    # 루프 i 값이 인덱스 키 값보다 많으면 탈출
                 break;
@@ -53,6 +52,7 @@ class TextFile():
                 i += 1    
         file = open(self.configDataClass.TextFilePath,"w",encoding="utf-8")                                               
         file.write(str(_str))
+        print("Label을 txt 파일에 저장했습니다")
         file.close()
         
     def LoadTextFile(self):                                                                                     # labels.txt 파일 로드
