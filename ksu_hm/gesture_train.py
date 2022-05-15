@@ -9,7 +9,7 @@ import threading
 import sys
 import re                                               # 문자열 정규식
 
-from pathlib import Path
+from pathlib import Path                                # 파일 찾는 라이브러리
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -84,7 +84,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         self.configDataClass = ConfigData()           # 데이터 클래스 생성
         self.isTextFile()
         self.isCsvFile()
-        self.TextFileClass = TextFile()               # TextFile 클래스
+        self.TextFileClass = TextFile()               # TextFile 클래스 
         self.newMPClass = NewMediapipe()              # MP 클래스 생성             
         super().__init__()                            # 부모 init() 실행
         self.setup_UI(mainWindow)        
@@ -177,12 +177,16 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
 
     def LoadIndexWithDict(self):
         if self.input_index_data():
-            self.LabelName = self.TextFileClass.LoadTextFile()
-            self.WinTextLabelEdit.setText(self.LabelName)
+                self.LabelName = self.TextFileClass.LoadTextFile()
+                self.WinTextLabelEdit.setText(self.LabelName)
 
     def SaveIndewWithDict(self):
         if self.input_index_data():
-            self.TextFileClass.SaveTextFile(self.WinTextLabelEdit.text())
+            try:
+                if not int(IndexNumber) < 0:
+                    self.TextFileClass.SaveTextFile(self.WinTextLabelEdit.text())
+            except:
+                print("label Save에서 에러")
 
     def CaptureMotion(self): 
         global IndexNumber                                                                     # 저장 버튼을 누르면 작동하는 함수 MediaPipe 클래스 안에 스택 함수를 사용
@@ -194,7 +198,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
                     self.WinDataListWidget.insertItem(0,StringLinesInfo)                       # 윈폼 ListWidget에 아이템 추가
                     print("Motion 값이 저장되었습니다")
                 else :
-                    print("index란에 숫자를 입력해주세요")
+                    print("index란에 양수를 입력해주세요")
             except:
                 print("index에서 에러가 발생했습니다")
 
