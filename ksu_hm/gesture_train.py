@@ -9,6 +9,7 @@ import threading
 import sys
 import re                                               # 문자열 정규식
 
+from pathlib import Path
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -35,16 +36,26 @@ class TextFile():
     def __init__(self):
         self.configDataClass = ConfigData()      
 
-    def SaveTextFile(self):
-        TxtFile = open(self.configDataClass.TextFilePath,"a")                                               # Append
+    def SaveTextFile(self,label):                                                                               # labels.txt 파일 세이브
+        global IndexNumber
+        i = 0
+        _str = ""
+        self.LoadTextFile()
+        print(len(self.configDataClass.LabelNameDict))
         while True:
-            line = TxtFile.readline()
-            if not line:
-                break
-            print(line)
-        TxtFile.close()
+            if i >= len(self.configDataClass.LabelNameDict):                                                    # 루프 i 값이 인덱스 키 값보다 많으면 탈출
+                break;
+            if i == int(IndexNumber):                                                                           # 윈폼에 적힌 인덱스에 해당하는 라벨은 윈폼에서 가져와서 입력
+                _str += str(i) + " : " + label +"\n"                                                                                 
+                i += 1
+            else:
+                _str += str(i) + " : " + self.configDataClass.LabelNameDict[i] +"\n"                            # 이전 테이터를 그대로 입력
+                i += 1    
+        file = open(self.configDataClass.TextFilePath,"w",encoding="utf-8")                                               
+        file.write(str(_str))
+        file.close()
         
-    def LoadTextFile(self):     
+    def LoadTextFile(self):                                                                                     # labels.txt 파일 로드
         i = 0   
         file = open(self.configDataClass.TextFilePath,"r",encoding="utf-8")
         while True:
@@ -59,7 +70,6 @@ class TextFile():
         file.close()
         try :
             if self.configDataClass.LabelNameDict.get(int(IndexNumber)):                                 # 저장한 딕셔너리에 IndexNumber 값이 있다면~
-                print("성공")
                 return (self.configDataClass.LabelNameDict[int(IndexNumber)])                            # 해당하는 딕셔너리 값을 반환
         except:
             return None
@@ -72,8 +82,10 @@ class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 
 class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )                                             
     def __init__(self,mainWindow):                    # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
         self.configDataClass = ConfigData()           # 데이터 클래스 생성
-        self.newMPClass = NewMediapipe()              # MP 클래스 생성     
+        self.isTextFile()
+        self.isCsvFile()
         self.TextFileClass = TextFile()               # TextFile 클래스
+        self.newMPClass = NewMediapipe()              # MP 클래스 생성             
         super().__init__()                            # 부모 init() 실행
         self.setup_UI(mainWindow)        
         self.configDict = {}                          # 딕셔너리 생성
@@ -86,9 +98,10 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         self.WinStartBtn.clicked.connect(self.onStart)                 # 버튼에 start 함수 연결
         self.WinStopBtn.clicked.connect(self.onStop)                   # 버튼에 stop 함수 연결
         self.WinExitBtn.clicked.connect(self.onExit)                 # 버튼에 exit 함수 연결
-        self.WinCaptureMotionBtn.clicked.connect(self.SaveMotion)    # 버튼에 저장하는 함수 연결         
+        self.WinCaptureMotionBtn.clicked.connect(self.CaptureMotion)    # 버튼에 저장하는 함수 연결         
         self.WinOpenFolerBtn.clicked.connect(self.OpenFolder)        # 버튼에 폴더 여는 함수 연결
         self.WinLoadTextFileBtn.clicked.connect(self.LoadIndexWithDict)
+        self.WinSaveTextFileBtn.clicked.connect(self.SaveIndewWithDict)
 
     def run(self):                                                   # 스레드로 돌릴 비디오 루프 함수 // 윈폼 라벨로 값을 넘겨 카메라를 보여줌
         global CamaraLoopOn 
@@ -167,12 +180,16 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
             self.LabelName = self.TextFileClass.LoadTextFile()
             self.WinTextLabelEdit.setText(self.LabelName)
 
-    def SaveMotion(self): 
+    def SaveIndewWithDict(self):
+        if self.input_index_data():
+            self.TextFileClass.SaveTextFile(self.WinTextLabelEdit.text())
+
+    def CaptureMotion(self): 
         global IndexNumber                                                                     # 저장 버튼을 누르면 작동하는 함수 MediaPipe 클래스 안에 스택 함수를 사용
         if self.input_index_data():                                                            # 문자열에 값이 있다면~
             try:
-                if  not int(IndexNumber) < 0 :                            # int형으로 변환 할 수 있는 문자열이면~   // 0을 넣으면 0<0 = False -> True // -1를 넣으면 True -> False
-                    DataLinesInfo = self.newMPClass.StackToNp(IndexNumber)     # NP 스택에 저장하고 File.shape 반환
+                if  not int(IndexNumber) < 0 :                                                 # int형으로 변환 할 수 있는 문자열이면~   // 0을 넣으면 0<0 = False -> True // -1를 넣으면 True -> False
+                    DataLinesInfo = self.newMPClass.StackToNp(IndexNumber)                     # NP 스택에 저장하고 File.shape 반환
                     StringLinesInfo = self.CvtDataToString(str(DataLinesInfo))                 # 반환된 값을 원하는 문자열 추가 후 String 형태로 변환
                     self.WinDataListWidget.insertItem(0,StringLinesInfo)                       # 윈폼 ListWidget에 아이템 추가
                     print("Motion 값이 저장되었습니다")
@@ -182,7 +199,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
                 print("index에서 에러가 발생했습니다")
 
     def input_index_data(self):    
-        global IndexNumber                                                             # 윈폼에 textline에 적힌 index 문자열 값을 가져오는 함수
+        global IndexNumber                                                                      # 윈폼에 textline에 적힌 index 문자열 값을 가져오는 함수
         if self.WinIndexLineEdit.text() != '':                                                  # 문자열이 비어있지 않다면~
             IndexNumber = self.WinIndexLineEdit.text()
             return True
@@ -191,16 +208,28 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
             return False
 
     def CvtDataToString(self,ConvertString):     
-        global IndexNumber                                                               # .shape 값을 String형으로 바꾸면서 필요한 문자열 추가
+        global IndexNumber                                                                       # .shape 값을 String형으로 바꾸면서 필요한 문자열 추가
         ConvertString = ConvertString.replace(","," Total Lines")
         StringIndex = ConvertString.find(")")
         ConvertString = ConvertString[:StringIndex] + ' ea' + ConvertString[StringIndex:]
         ConvertString += " idx %s" %IndexNumber
         return ConvertString
+        
+    def isTextFile(self):                                                                       # labels.txt 파일이 없다면 기본값으로 생성
+        isPath = Path(self.configDataClass.TextFilePath)
+        if not isPath.exists():
+            file = open(self.configDataClass.TextFilePath,"w",encoding="utf-8")
+            file.write("1 : None")
+
+    def isCsvFile(self):
+        isPath = Path(self.configDataClass.CsvFilePath)
+        if not isPath.exists():
+            print("CSV 파일이 필요합니다")
+            sys.exit()
 
 class NewMediapipe(): 
     def __init__(self):    
-        self.configDataClass = ConfigData()           # 데이터 클래스 생성
+        self.configDataClass = ConfigData()                                                      # 데이터 클래스 생성
         self.max_num_hands = 1        
         self.gesture = {
             0:'fist', 1:'one', 2:'two', 3:'three', 4:'four', 5:'five',
@@ -273,7 +302,10 @@ app.exec_()
 # CaptureMotion를 누르면 현재 손 위치 값을 모아둔다
 # stop을 누르면 모아둔 손 위치 값과 예전 csv파일의 값들을 합쳐 NewCsv 파일로 저장한다
 
+# 라벨 로드는 파일에서 값을 불러와 인덱스에 해당하는 라벨명은 보여준다
+# 라벨 저장은 파일에서 값을 불러와 윈폼에 적힌 라벨명을 해당하는 인덱스와 함께 이전 값과 함께 다시 저장
 #ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
 
 # thread안에서 setEnabled/setEnabled 사용 시 timer 경고가 뜬다
+# labels.txt에서 인덱스를 직접 적어서 늘여줘야 함
