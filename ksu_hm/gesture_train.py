@@ -1,6 +1,4 @@
 
-from glob import glob
-from typing import List
 from UI import *
 import cv2
 import mediapipe as mp
@@ -9,7 +7,7 @@ import os, sys, subprocess
 import os
 import threading
 import sys
-import re
+import re                                               # 문자열 정규식
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
