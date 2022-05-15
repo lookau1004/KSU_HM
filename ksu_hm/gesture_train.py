@@ -24,6 +24,7 @@ class ConfigData():                                                             
         self.DataFolderPath = self.DefaultPath.replace("gesture_train.py","Data/")                          # Data 폴더 경로
         self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"                                        # csv 파일 경로
         self.TextFilePath = self.DataFolderPath + "labels.txt"                                              # labels 파일 경로
+        self.NewCsvFileName = "new_gesture_train.csv"
         self.CamaraWidth = 640
         self.CamaraHeight = 480
         self.LabelNameDict = {}
@@ -152,7 +153,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         self.isThreadStarted = False                                    # stop 버튼을 누르면 작동중인 스레드가 없어질테니
         CamaraLoopOn = False                                            # 카메라 루프 탈출하고 (스레드가 무한루프에서 나옴)
         IsGetHand = False                                               # 혹시 손이 잡힌 상태로 stop을 눌렀다면 강제로 체크용 bool 값을 바꾸고
-        self.CheckCaptureMotion()                                    # CaptionMotion 버튼의 활성화/비활성화를 isGetHand에 따라 바꾼다
+        self.CheckCaptureMotion()                                       # CaptionMotion 버튼의 활성화/비활성화를 isGetHand에 따라 바꾼다
         print("Thread stoped..")        
 
     def onExit(self):
@@ -193,7 +194,7 @@ class ConfigWindow(wTraining.Ui_MainWindow):          # Window 클래스 PyQT5 �
         if self.input_index_data():                                                            # 문자열에 값이 있다면~
             try:
                 if  not int(IndexNumber) < 0 :                                                 # int형으로 변환 할 수 있는 문자열이면~   // 0을 넣으면 0<0 = False -> True // -1를 넣으면 True -> False
-                    DataLinesInfo = self.newMPClass.StackToNp(IndexNumber)                     # NP 스택에 저장하고 File.shape 반환
+                    DataLinesInfo = self.newMPClass.StackToNp(IndexNumber)                     # NP 스택에 저장하고 File.shape 반환 (110,16)
                     StringLinesInfo = self.CvtDataToString(str(DataLinesInfo))                 # 반환된 값을 원하는 문자열 추가 후 String 형태로 변환
                     self.WinDataListWidget.insertItem(0,StringLinesInfo)                       # 윈폼 ListWidget에 아이템 추가
                     print("Motion 값이 저장되었습니다")
@@ -255,7 +256,7 @@ class NewMediapipe():
     
     def SaveFileToCsv(self):      
         try:  
-            np.savetxt(self.configDataClass.DataFolderPath + "new_gesture_train.csv", self.file, fmt='%f',delimiter=',')
+            np.savetxt(self.configDataClass.DataFolderPath + self.configDataClass.NewCsvFileName, self.file, fmt='%f',delimiter=',')
             print("CSV 파일로 저장되었습니다")
         except:
             print("저장에서 에러가 발생했습니다")
