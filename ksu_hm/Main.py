@@ -17,6 +17,7 @@ from cvzone.HandTrackingModule import HandDetector
 
 
 
+
 global GlobalMainDict                           # 딕서녀리 전역 변수
 
 gesture = {
