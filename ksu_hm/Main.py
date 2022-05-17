@@ -97,6 +97,7 @@ class newCamara():                                                              
         if sys.platform == "win32":
             cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
             alt_command = 'alt'
+
         else:           
             cap = cv2.VideoCapture(0)  
             alt_command = 'command'
@@ -116,6 +117,7 @@ class newCamara():                                                              
 
         while cap.isOpened():            
             success, frame = cap.read()
+
             if success:
                 frame = cv2.flip(frame,1) # 좌우반전           
                 frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
@@ -154,51 +156,61 @@ class newCamara():                                                              
                         
                         if is_Mode and idx in gesture_1.keys(): # is_Mode = 시작 제스쳐 선입력 됐는지 확인
                             gesture_n_times[idx] += 1   # 제스쳐가 3번이상 인식 됐을때만, 아래 조건을 실행하게 합니다. 
+
                             if  (idx == 1) and gesture_n_times[idx] > 2:
                                 pyautogui.click()
                                 is_Mode = False
                                 gestrue_n_times = gesture_0_times
                                 break
+
                             elif (idx == 9) and gesture_n_times[idx] > 2:
                                 pyautogui.press('space')
                                 is_Mode = False
                                 gestrue_n_times = gesture_0_times
                                 break
+
                             elif (idx == 3) and gesture_n_times[idx] > 2:
                                 pyautogui.hotkey(alt_command,'right')  # alt + 오른쪽 키 조합키 - 브라우저
                                 pyautogui.press('right')         # 오른쪽 키 누르기 - 파워포인트
                                 is_Mode = False
                                 gestrue_n_times = gesture_0_times
                                 break
+
                             elif (idx == 4) and gesture_n_times[idx] > 2:
                                 pyautogui.hotkey(alt_command,'left')   # alt + 왼쪽 키 조합키 - 브라우저
                                 pyautogui.press('left')           # 왼쪽 키 누르기 - 파워포인트
                                 is_Mode = False
                                 gestrue_n_times = gesture_0_times
                                 break
+
                             elif (idx == 11) and gesture_n_times[idx] > 2:
                                 sharedNum.value = 0
                                 break
+
                         elif (idx == 1):    # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
                             weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
                             diff_x = res.landmark[8].x - mouse_current_position['x']
                             diff_y = res.landmark[8].y - mouse_current_position['y']
                             mouse_current_position['x'] = res.landmark[8].x
                             mouse_current_position['y'] = res.landmark[8].y
+
                             if (abs(diff_x) + abs(diff_y)) > 0.25:  # 너무 많게는 포인터를 움직이지 않습니다.
                                 pass
+
                             elif (abs(diff_x) + abs(diff_y)) > 0.005:   # 너무 적게는 포인터를 움직이지 않습니다.
-                                pyautogui.move((diff_x)*2000**weight//1, (diff_y)*2000**weight//1)
-                                gestrue_n_times = gesture_0_times
+                                pyautogui.move((diff_x)*2000**weight//1, (diff_y)*2000**weight//1,_pause=False)                          # _pause 옵션 끄면 렉 사라짐                                                                                            
+                                gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
 
                 if start_time_limit < time.time():
                     is_Mode = False
                     gestrue_n_times = gesture_0_times
                     cv2.putText(frame, f'',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,(255,0,0),2)
+
                 if(is_Mode):                                                                        # 입력 모드 체크
                     cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
                         1,(255,0,0),2)
+
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
                     1,(255,0,0),2)
                 cv2.imshow('Camera Window', frame)
