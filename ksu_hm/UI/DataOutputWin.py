@@ -11,37 +11,28 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_OutputWindow(object):
-    def setupUi(self, OutputWindow):
-        OutputWindow.setObjectName("OutputWindow")
-        OutputWindow.resize(800, 600)
-        self.centralwidget = QtWidgets.QWidget(OutputWindow)
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(800, 600)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.WinOutputList = QtWidgets.QListWidget(self.centralwidget)
         self.WinOutputList.setGeometry(QtCore.QRect(10, 10, 771, 551))
         self.WinOutputList.setObjectName("WinOutputList")
-        OutputWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(OutputWindow)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
         self.menubar.setObjectName("menubar")
-        OutputWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(OutputWindow)
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
-        OutputWindow.setStatusBar(self.statusbar)
+        MainWindow.setStatusBar(self.statusbar)
 
-        self.retranslateUi(OutputWindow)
-        QtCore.QMetaObject.connectSlotsByName(OutputWindow)
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    def retranslateUi(self, OutputWindow):
+    def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        OutputWindow.setWindowTitle(_translate("OutputWindow", "Output Window"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    OutputWindow = QtWidgets.QMainWindow()
-    ui = Ui_OutputWindow()
-    ui.setupUi(OutputWindow)
-    OutputWindow.show()
-    sys.exit(app.exec_())

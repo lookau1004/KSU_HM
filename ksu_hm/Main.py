@@ -40,7 +40,7 @@ class ConfigData():                             # 옵션 설정 데이터들을 
     def Clear(self):
         self.DefaultTimerNum = 0
 
-class DataWindow(DataOutputWin.Ui_OutputWindow):                                                      # 결과값을 보여주는 Window 창
+class DataWindow(DataOutputWin.Ui_MainWindow):                                                      # 결과값을 보여주는 Window 창
     def __init__(self,mainWindow):
         super().__init__()
         self.setupUi(mainWindow)
