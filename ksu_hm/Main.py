@@ -60,6 +60,7 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
         
         #print("윈도우에서 sharedNum 값 : " , sharedNum.value)
 
+
 class newTimer():                                                                         # 타이머 클래스 ( 타이머에 관한 함수 포함 )
     def __init__(self,DefaultSecond,sharedNum):
         self.timer_run(DefaultSecond,sharedNum)
