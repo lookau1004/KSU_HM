@@ -109,17 +109,17 @@
     <property name="geometry">
      <rect>
       <x>840</x>
-      <y>350</y>
+      <y>290</y>
       <width>256</width>
-      <height>341</height>
+      <height>401</height>
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="WinSavedLinesTxt">
+   <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>850</x>
-      <y>330</y>
+      <y>270</y>
       <width>111</width>
       <height>16</height>
      </rect>
@@ -132,62 +132,13 @@
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>310</y>
+      <y>252</y>
       <width>111</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>Open Folder</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="WinTxtLabelText">
-    <property name="geometry">
-     <rect>
-      <x>850</x>
-      <y>260</y>
-      <width>41</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Label</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="WinTextLabelEdit">
-    <property name="geometry">
-     <rect>
-      <x>900</x>
-      <y>250</y>
-      <width>113</width>
-      <height>31</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="WinLoadTextFileBtn">
-    <property name="geometry">
-     <rect>
-      <x>1020</x>
-      <y>240</y>
-      <width>101</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Label Load</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="WinSaveTextFileBtn">
-    <property name="geometry">
-     <rect>
-      <x>1020</x>
-      <y>270</y>
-      <width>101</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Label Save</string>
     </property>
    </widget>
   </widget>
