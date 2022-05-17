@@ -15,9 +15,7 @@ from PyQt5.QtWidgets import *
 from tkinter import Frame
 from cvzone.HandTrackingModule import HandDetector
 
-
-
-global GlobalMainDict                           # 딕서녀리 전역 변수
+GlobalMainDict = {}                          # 딕서녀리 전역 변수
 
 gesture = {
     0:'start', 1:'one', 2:'two', 3:'three', 4:'four', 5:'five',
@@ -179,18 +177,35 @@ class newCamara():                                                              
                             elif (idx == 11) and gesture_n_times[idx] > 2:
                                 sharedNum.value = 0
                                 break
+<<<<<<< HEAD
                         elif (idx == 1):    # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
-                            weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
+                           #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
+=======
+
+                        elif (idx == 1):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
+                            #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
+>>>>>>> rihyun
                             diff_x = res.landmark[8].x - mouse_current_position['x']
                             diff_y = res.landmark[8].y - mouse_current_position['y']
                             mouse_current_position['x'] = res.landmark[8].x
                             mouse_current_position['y'] = res.landmark[8].y
+<<<<<<< HEAD
                             if (abs(diff_x) + abs(diff_y)) > 0.25:  # 너무 많게는 포인터를 움직이지 않습니다.
                                 pass
                             elif (abs(diff_x) + abs(diff_y)) > 0.005:   # 너무 적게는 포인터를 움직이지 않습니다.
-                                pyautogui.move((diff_x)*2000**weight//1, (diff_y)*2000**weight//1)
+                                pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1)
                                 gestrue_n_times = gesture_0_times
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS) # 관절을 프레임에 그린다.
+=======
+
+                            if (abs(diff_x) + abs(diff_y)) > 0.25:                                                                       # 너무 많게는 포인터를 움직이지 않습니다.
+                                pass
+
+                            elif (abs(diff_x) + abs(diff_y)) > 0.005:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
+                                pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
+                                gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
+                        mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.
+>>>>>>> rihyun
 
                 if start_time_limit < time.time():
                     is_Mode = False
@@ -215,7 +230,6 @@ class newCamara():                                                              
 
 if __name__ == '__main__':
 
-    GlobalMainDict = {}
     sharedNum = Value('i')                                                  # 프로세스간에 데이터 공유를 위해 Value를 이용하여 공유 메모리 맵 사용
 
     app = QtWidgets.QApplication(sys.argv)                                  # PyQT5 메인 윈도우 클래스 생성 부분
