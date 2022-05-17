@@ -1,3 +1,3 @@
-from . import DialogTest
+from . import DataOutputWin
 from . import Window
 from . import wTraining
