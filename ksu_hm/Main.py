@@ -11,6 +11,7 @@ import os
 from multiprocessing import Process,Value
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 
 from tkinter import Frame
 from cvzone.HandTrackingModule import HandDetector
@@ -32,6 +33,9 @@ class ConfigData():                             # 옵션 설정 데이터들을 
     
     def Clear(self):
         self.DefaultTimerNum = 0
+
+class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 클래스의 오버라이딩하기 위해서 클래스 생성                                                       # 활용할 Key 선언
+    pass
     
 class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )
     def __init__(self,mainWindow):                 # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
@@ -43,23 +47,23 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
     def setup_UI(self,mainWindow):                              # 윈도우 UI 생성 부분
         self.setupUi(mainWindow)                                # PyQT5(Window.py)의 setup Ui() 실행
         self.WinApplyBtn.clicked.connect(self.btnApply)         # 버튼에 함수 연결
+        self.WinTimerTxt.returnPressed.connect(self.btnApply)
 
     def input_data(self):
         global GlobalMainDict                                                           # 전역 변수 사용
-        self.configDataClass.DefaultTimerNum = (int)(self.WinTimerTxt.toPlainText())    # 데이터 클래스 안에 있는 기본 타이머 값에 윈도우 창에서 사용자가 입력한 값 대입
+        self.configDataClass.DefaultTimerNum = (int)(self.WinTimerTxt.text())           # 데이터 클래스 안에 있는 기본 타이머 값에 윈도우 창에서 사용자가 입력한 값 대입
         self.configDict[('Config')] = self.configDataClass                              # 딕셔너리에 생성된 클래스를 저장
         GlobalMainDict = self.configDict                                                # 저장한 딕셔너리를 전역 딕셔너리에 대입
         
         #print('ConfigData TimerNum = {}'.format(configDict[('Config')].TimerNum))
         
     def btnApply(self):                                                                 # 확인 버튼을 눌렸을 때 실행 함수
-        sharedNum.value = (int)(self.WinTimerTxt.toPlainText())                         # 공유 메모리 맵 value에 타이머 현재 값을 대입
+        sharedNum.value = (int)(self.WinTimerTxt.text())                                # 공유 메모리 맵 value에 타이머 현재 값을 대입
         self.WinCurrentTimeLabel.setText((str)(sharedNum.value))                        # Win창에 있는 현재 타이머 표기 값 바꿈
         self.input_data()
         mainWindow.close()                                                              # 현재 윈폼 종료
         
         #print("윈도우에서 sharedNum 값 : " , sharedNum.value)
-
 
 class newTimer():                                                                         # 타이머 클래스 ( 타이머에 관한 함수 포함 )
     def __init__(self,DefaultSecond,sharedNum):
@@ -229,19 +233,16 @@ if __name__ == '__main__':
     sharedNum = Value('i')                                                  # 프로세스간에 데이터 공유를 위해 Value를 이용하여 공유 메모리 맵 사용
 
     app = QtWidgets.QApplication(sys.argv)                                  # PyQT5 메인 윈도우 클래스 생성 부분
-    mainWindow = QtWidgets.QMainWindow()
+    mainWindow = NewMainWindow()
     ui = ConfigWindow(mainWindow)
     mainWindow.show()
     app.exec_()
     
     DefaultSecond = int(GlobalMainDict[('Config')].DefaultTimerNum)
-
     pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
 
     pCamera.start()
     pCamera.join()
-
-    print("현재 타이머 시간 : ",sharedNum.value)
 
 
 # 1 윈도우 창안에서 값 교환 완료 , 데이터들을 클래스 형태로 정리한 후, 딕셔너리 형태로 변환 및 출력 완료
