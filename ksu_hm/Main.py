@@ -1,3 +1,4 @@
+from glob import glob
 from UI import *
 
 import time
@@ -27,7 +28,7 @@ gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', 11: 'exit'}
 
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
-        self.DefaultTimerNum = 10                                                                   # 기본 타이머 값
+        self.DefaultTimerNum = 1                                                                   # 기본 타이머 값
         self.DefaultPath = os.path.abspath(__file__)                                                # 현재 py 파일 경로
         self.CsvFilePath = self.DefaultPath.replace("Main.py","Data/gesture_train.csv")            # csv 파일 경로
     
@@ -35,9 +36,8 @@ class ConfigData():                             # 옵션 설정 데이터들을 
         self.DefaultTimerNum = 0
 
 class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 클래스의 오버라이딩하기 위해서 클래스 생성 
-    def closeEvent(self,event):                       # 종료 시 다음 구문으로 넘어가지 않고 바로 종료
-        sys.exit()              
-
+    def closeEvent(self,event):                       # 종료 시 이벤트 ( 현재 기능 없음 )
+        pass            
     
 class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )
     def __init__(self,mainWindow):                 # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
@@ -53,16 +53,20 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
 
     def input_data(self):
         global GlobalMainDict                                                           # 전역 변수 사용
-        self.configDataClass.DefaultTimerNum = (int)(self.WinTimerTxt.text())           # 데이터 클래스 안에 있는 기본 타이머 값에 윈도우 창에서 사용자가 입력한 값 대입
-        self.configDict[('Config')] = self.configDataClass                              # 딕셔너리에 생성된 클래스를 저장
+        self.configDataClass.DefaultTimerNum = int(self.WinTimerTxt.text())           # 데이터 클래스 안에 있는 기본 타이머 값에 윈도우 창에서 사용자가 입력한 값 대입
+        self.configDict['Config'] = self.configDataClass                              # 딕셔너리에 생성된 클래스를 저장
         GlobalMainDict = self.configDict                                                # 저장한 딕셔너리를 전역 딕셔너리에 대입
         
         #print('ConfigData TimerNum = {}'.format(configDict[('Config')].TimerNum))
         
     def btnApply(self):                                                                 # 확인 버튼을 눌렸을 때 실행 함수
-        sharedNum.value = (int)(self.WinTimerTxt.text())                                # 공유 메모리 맵 value에 타이머 현재 값을 대입
-        self.WinCurrentTimeLabel.setText((str)(sharedNum.value))                        # Win창에 있는 현재 타이머 표기 값 바꿈
-        self.input_data()
+        try:
+            if not int(self.WinTimerTxt.text()) < 0:                                            # 문자열 및 음수 체크
+                sharedNum.value = int(self.WinTimerTxt.text())                                # 공유 메모리 맵 value에 타이머 현재 값을 대입
+                self.WinCurrentTimeLabel.setText(str(sharedNum.value))                        # Win창에 있는 현재 타이머 표기 값 바꿈
+                self.input_data()
+        except:
+            print("타이머 입력 에러")
         mainWindow.close()                                                              # 현재 윈폼 종료
         
         #print("윈도우에서 sharedNum 값 : " , sharedNum.value)
@@ -128,7 +132,7 @@ class newCamara():                                                              
                 frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
                 result = hands.process(frame)                               # RGB값으로 바뀐 프레임에 손 모델 해석 ( 손의 위치와 관절 탐지 )
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
-
+                
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
                     sharedNum.value = DefaultSecond                         # 타이머 초기화
                     
@@ -219,7 +223,7 @@ class newCamara():                                                              
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
                     1,(255,0,0),2)
                 cv2.imshow('Camera Window', frame)
-
+           
             if cv2.waitKey(1) == 27:
                 break
            
@@ -240,11 +244,12 @@ if __name__ == '__main__':
     mainWindow.show()
     app.exec_()
     
-    DefaultSecond = int(GlobalMainDict[('Config')].DefaultTimerNum)
-    pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
+    if 'Config' in GlobalMainDict:
+        DefaultSecond = int(GlobalMainDict['Config'].DefaultTimerNum)
+        pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
 
-    pCamera.start()
-    pCamera.join()
+        pCamera.start()
+        pCamera.join()
 
 
 # 1 윈도우 창안에서 값 교환 완료 , 데이터들을 클래스 형태로 정리한 후, 딕셔너리 형태로 변환 및 출력 완료
