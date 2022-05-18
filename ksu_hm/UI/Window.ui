@@ -69,7 +69,7 @@
    <widget class="QLineEdit" name="WinTimerTxt">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>90</x>
       <y>20</y>
       <width>113</width>
       <height>20</height>

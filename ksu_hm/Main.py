@@ -34,8 +34,10 @@ class ConfigData():                             # 옵션 설정 데이터들을 
     def Clear(self):
         self.DefaultTimerNum = 0
 
-class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 클래스의 오버라이딩하기 위해서 클래스 생성                                                       # 활용할 Key 선언
-    pass
+class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 클래스의 오버라이딩하기 위해서 클래스 생성 
+    def closeEvent(self,event):                       # 종료 시 다음 구문으로 넘어가지 않고 바로 종료
+        sys.exit()              
+
     
 class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )
     def __init__(self,mainWindow):                 # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌

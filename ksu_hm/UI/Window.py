@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Window.ui'
+# Form implementation generated from reading ui file 'window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -30,7 +30,7 @@ class Ui_MainWindow(object):
         self.WincTimerValue.setGeometry(QtCore.QRect(230, 80, 54, 16))
         self.WincTimerValue.setObjectName("WincTimerValue")
         self.WinTimerTxt = QtWidgets.QLineEdit(self.centralwidget)
-        self.WinTimerTxt.setGeometry(QtCore.QRect(60, 20, 113, 20))
+        self.WinTimerTxt.setGeometry(QtCore.QRect(90, 20, 113, 20))
         self.WinTimerTxt.setObjectName("WinTimerTxt")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
