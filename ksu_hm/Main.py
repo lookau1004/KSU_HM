@@ -1,4 +1,3 @@
-from glob import glob
 from UI import *
 
 import time
