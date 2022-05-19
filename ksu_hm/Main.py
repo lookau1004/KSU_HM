@@ -23,11 +23,13 @@ gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', 11: 'exit'}
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
         self.DefaultTimerNum = 1                                                                   # 기본 타이머 값
-        self.DefaultPath = os.path.abspath(__file__)                                                # 현재 py 파일 경로
+        self.DefaultPath = os.path.abspath(__file__)                                               # 현재 py 파일 경로
         self.DataFolderPath = self.DefaultPath.replace("Main.py","Data/")                          # Data 폴더 경로
-        self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"            # csv 파일 경로
+        self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"                               # csv 파일 경로
         self.ImgFolderPath = self.DataFolderPath + "img/"
         self.TextFilePath = self.DataFolderPath + "labels.txt"
+        self.CamaraWidth = 640                                                                     # 640x480 | 480p | 4:3
+        self.CamaraHeight = 480
         self.LabelNameDict = {}
 
     def Clear(self):
@@ -104,6 +106,8 @@ class newCamara():                                                              
 
         if sys.platform == "win32":
             cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.configDataClass.CamaraHeight)
             alt_command = 'alt'
 
         else:           
