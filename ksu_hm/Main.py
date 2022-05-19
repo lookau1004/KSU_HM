@@ -30,6 +30,7 @@ class ConfigData():                             # 옵션 설정 데이터들을 
         self.DefaultTimerNum = 1                                                                   # 기본 타이머 값
         self.DefaultPath = os.path.abspath(__file__)                                                # 현재 py 파일 경로
         self.CsvFilePath = self.DefaultPath.replace("Main.py","Data/gesture_train.csv")            # csv 파일 경로
+        self.ImgFilePath = self.DefaultPath.replace("Main.py","Data/img/")
     
     def Clear(self):
         self.DefaultTimerNum = 0
@@ -125,6 +126,7 @@ class newCamara():                                                              
 
         while cap.isOpened():            
             success, frame = cap.read()
+            idx = None
 
             if success:
                 frame = cv2.flip(frame,1) # 좌우반전           
@@ -134,7 +136,7 @@ class newCamara():                                                              
                 
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
                     sharedNum.value = DefaultSecond                         # 타이머 초기화
-                    
+
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
                         joint = np.zeros((21, 3))
                         for j, lm in enumerate(res.landmark):
@@ -221,7 +223,11 @@ class newCamara():                                                              
 
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
                     1,(255,0,0),2)
-                cv2.imshow('Camera Window', frame)
+                
+                if not idx == None:                                                                                                     # 관절을 입힌 프레임을 숫자 이미지를 추가하는 함수에 전달
+                    frame = self.NumberImg(idx,frame)
+
+                cv2.imshow('Camera Window', frame)                
            
             if cv2.waitKey(1) == 27:
                 break
@@ -232,6 +238,25 @@ class newCamara():                                                              
         cap.release()
         cv2.destroyAllWindows()
         self.pTimer.terminate()                                             # 타이머 프로세스 강제종료
+
+    def NumberImg(self,_idx,_frame):
+        if _idx >= 0 and _idx <= 9:
+            NumImg = cv2.imread(self.configDataClass.ImgFilePath + str(_idx)+".png")
+            h_NumImg, w_NumImg, _ = NumImg.shape
+            h_frame, w_frame, _ = _frame.shape
+
+            center_y = int(h_frame / 8)
+            center_x = int(w_frame / 8)
+
+            top_y = center_y - int(h_NumImg / 2)
+            left_x = center_x - int(w_NumImg / 2)
+
+            bottom_y = top_y + h_NumImg
+            right_x = left_x + w_NumImg
+
+            _frame[top_y:bottom_y,left_x:right_x] = NumImg
+
+        return _frame
 
 if __name__ == '__main__':
 
