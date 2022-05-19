@@ -223,15 +223,15 @@ class newCamara():                                                              
 
                 if(is_Mode):                                                                                                            # 입력 모드 체크
                     cv2.putText(frame, f'input mode',(200,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                           # 화면에 input mode 표시
-                        1,(0,0,255),2)                                                                                                  # (0,0,255) Blue,Green,Red 순서
+                        1,(0,0,255),2) # 빨강                                                                                            # (0,0,255) Blue,Green,Red 순서
 
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                              # 화면에 타이머 표시
-                    1,(255,0,0),2)
+                    1,(192,192,192),2) # 은색
                 
                 if not idx == None:                                                                                                     # 관절을 입힌 프레임을 숫자 이미지를 추가하는 함수에 전달
                     frame = self.NumberImg(idx,frame)
                     cv2.putText(frame,self.configDataClass.LabelNameDict[idx],(400,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                  # 화면에 라벨명 표시함, 유니코드 지원 안함, 한글 라벨은 표시 불가
-                    1,(255,0,0),2)                                                                                                      
+                    1,(0,255,0),2) # 초록색                                                                                                      
 
                 cv2.imshow('Camera Window', frame)                
            
