@@ -7,30 +7,29 @@ import numpy as np
 import mediapipe as mp
 import sys
 import os
+import re    
 
 from multiprocessing import Process,Value
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
-from tkinter import Frame
 from cvzone.HandTrackingModule import HandDetector
 
 GlobalMainDict = {}                          # 딕서녀리 전역 변수
 
-gesture = {
-    0:'start', 1:'one', 2:'two', 3:'three', 4:'four', 5:'five',
-    6:'six', 7:'seven', 8:'eight', 9:'nine', 10:'ten', 11: 'adios'}
-
 gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', 11: 'exit'}
-
 
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
         self.DefaultTimerNum = 1                                                                   # 기본 타이머 값
         self.DefaultPath = os.path.abspath(__file__)                                                # 현재 py 파일 경로
-        self.CsvFilePath = self.DefaultPath.replace("Main.py","Data/gesture_train.csv")            # csv 파일 경로
-    
+        self.DataFolderPath = self.DefaultPath.replace("Main.py","Data/")                          # Data 폴더 경로
+        self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"            # csv 파일 경로
+        self.ImgFolderPath = self.DataFolderPath + "img/"
+        self.TextFilePath = self.DataFolderPath + "labels.txt"
+        self.LabelNameDict = {}
+
     def Clear(self):
         self.DefaultTimerNum = 0
 
@@ -88,6 +87,7 @@ class newTimer():                                                               
 class newCamara():                                                                        # 카메라 클래스 ( 카메라 관련 함수 )
     def __init__(self,DefaultSecond,sharedNum):
         self.configDataClass = ConfigData()                                                 # 데이터 클래스 생성
+        self.LoadTextFile()
         self.pTimer = Process(target = newTimer, name = "TimerProcess", args=(DefaultSecond,sharedNum,))        # 카메라 프로세스가 종료 했을때 타이머 프로세스도 종료 해야하므로 내부에서 선언
         self.pTimer.start()
         self.CamaraOpen(DefaultSecond,sharedNum)
@@ -125,6 +125,7 @@ class newCamara():                                                              
 
         while cap.isOpened():            
             success, frame = cap.read()
+            idx = None
 
             if success:
                 frame = cv2.flip(frame,1) # 좌우반전           
@@ -134,7 +135,7 @@ class newCamara():                                                              
                 
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
                     sharedNum.value = DefaultSecond                         # 타이머 초기화
-                    
+
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
                         joint = np.zeros((21, 3))
                         for j, lm in enumerate(res.landmark):
@@ -208,6 +209,7 @@ class newCamara():                                                              
                             elif (abs(diff_x) + abs(diff_y)) > 0.005:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
                                 pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
                                 gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
+                       
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.
 
                 if start_time_limit < time.time():
@@ -215,13 +217,19 @@ class newCamara():                                                              
                     gestrue_n_times = gesture_0_times
                     cv2.putText(frame, f'',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,(255,0,0),2)
 
-                if(is_Mode):                                                                        # 입력 모드 체크
-                    cv2.putText(frame, f'input mode',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
-                        1,(255,0,0),2)
+                if(is_Mode):                                                                                                            # 입력 모드 체크
+                    cv2.putText(frame, f'input mode',(200,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                           # 화면에 input mode 표시
+                        1,(0,0,255),2)                                                                                                  # (0,0,255) Blue,Green,Red 순서
 
-                cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,\
+                cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                              # 화면에 타이머 표시
                     1,(255,0,0),2)
-                cv2.imshow('Camera Window', frame)
+                
+                if not idx == None:                                                                                                     # 관절을 입힌 프레임을 숫자 이미지를 추가하는 함수에 전달
+                    frame = self.NumberImg(idx,frame)
+                    cv2.putText(frame,self.configDataClass.LabelNameDict[idx],(400,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                  # 화면에 라벨명 표시함, 유니코드 지원 안함, 한글 라벨은 표시 불가
+                    1,(255,0,0),2)                                                                                                      
+
+                cv2.imshow('Camera Window', frame)                
            
             if cv2.waitKey(1) == 27:
                 break
@@ -231,7 +239,42 @@ class newCamara():                                                              
     
         cap.release()
         cv2.destroyAllWindows()
-        self.pTimer.terminate()                                             # 타이머 프로세스 강제종료
+        self.pTimer.terminate()                                                                                                       # 타이머 프로세스 강제종료
+
+    def NumberImg(self,_idx,_frame):
+        if _idx >= 0 and _idx <= 9:
+            NumImg = cv2.imread(self.configDataClass.ImgFolderPath + str(_idx)+".png")                                                            
+            h_NumImg, w_NumImg, _ = NumImg.shape
+            h_frame, w_frame, _ = _frame.shape
+
+            center_y = int(h_frame / 7)
+            center_x = int(w_frame / 7)
+
+            top_y = center_y - int(h_NumImg / 2)
+            left_x = center_x - int(w_NumImg / 2)
+
+            bottom_y = top_y + h_NumImg
+            right_x = left_x + w_NumImg
+
+            _frame[top_y:bottom_y,left_x:right_x] = NumImg
+
+        return _frame
+
+    def LoadTextFile(self):                                                                                     # labels.txt 파일 로드
+        i = 0   
+        file = open(self.configDataClass.TextFilePath,"r",encoding="utf-8")
+
+        while True:
+            line = file.readline()
+            if not line:
+                break            
+            _str = line.replace(":","")                                                                  # : 삭제
+            _str = re.sub(r"[0-9]","",_str)                                                              # 정규식으로 숫자 삭제            
+            _str = _str.strip()                                                                          # 개행 삭제
+            self.configDataClass.LabelNameDict[i] = _str
+            i += 1
+
+        file.close()    
 
 if __name__ == '__main__':
 
