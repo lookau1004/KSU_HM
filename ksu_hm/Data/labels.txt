@@ -1,5 +1,5 @@
 0 : None
-1 : 이름
+1 : Click
 2 : aa
 3 : b
 4 : c
