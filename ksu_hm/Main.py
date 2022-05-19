@@ -41,8 +41,8 @@ class NewMainWindow(QtWidgets.QMainWindow):           # 기본 메인 윈도우 
     
 class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상속 받아서 함수 추가 ( 수정 필요 )
     def __init__(self,mainWindow):                 # Qt Designer로 디자인을 만든 후 ui 파일을  pyuic5 -x 이름.ui -o 이름.py 명령어 실행 후 py 파일로 바꿔줌
-        self.setup_UI(mainWindow)
         super().__init__()                         # 부모 init() 실행
+        self.setup_UI(mainWindow)
         self.configDict = {}                       # 딕셔너리 생성
         self.configDataClass = ConfigData()        # 데이터 클래스 생성
         
@@ -78,8 +78,8 @@ class newTimer():                                                               
     def timer_run(self,DefaultSecond,sharedNum):                                        # 타이머 작동 함수 1초마다 값 줄어듬
         sharedNum.value = DefaultSecond
         while(sharedNum.value):
-            sharedNum.value = sharedNum.value - 1
             time.sleep(1)
+            sharedNum.value = sharedNum.value - 1
             print("Timer Running",sharedNum.value)
         
     def refresh_timer(self,DefaultSecond,sharedNum):                                    # 타이머 초기화 함수( 현재 사용 안함 )
@@ -223,15 +223,15 @@ class newCamara():                                                              
 
                 if(is_Mode):                                                                                                            # 입력 모드 체크
                     cv2.putText(frame, f'input mode',(200,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                           # 화면에 input mode 표시
-                        1,(0,0,255),2)                                                                                                  # (0,0,255) Blue,Green,Red 순서
+                        1,(0,0,255),2) # 빨강                                                                                            # (0,0,255) Blue,Green,Red 순서
 
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                              # 화면에 타이머 표시
-                    1,(255,0,0),2)
+                    1,(192,192,192),2) # 은색
                 
                 if not idx == None:                                                                                                     # 관절을 입힌 프레임을 숫자 이미지를 추가하는 함수에 전달
                     frame = self.NumberImg(idx,frame)
                     cv2.putText(frame,self.configDataClass.LabelNameDict[idx],(400,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                  # 화면에 라벨명 표시함, 유니코드 지원 안함, 한글 라벨은 표시 불가
-                    1,(255,0,0),2)                                                                                                      
+                    1,(0,255,0),2) # 초록색                                                                                                      
 
                 cv2.imshow('Camera Window', frame)                
            
