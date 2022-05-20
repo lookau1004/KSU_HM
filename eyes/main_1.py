@@ -14,7 +14,8 @@ L_H_LEFT = [33]
 L_H_RIGHT = [133] # 왼쪽 눈 좌우
 R_H_LEFT = [362] #오른쪽 눈 좌우
 R_H_RIGHT = [263]
-mouse_current_position_x,mouse_current_position_y=pyautogui.position()
+mouse_current_position_x,mouse_current_position_y = 0,0
+
 cap = cv.VideoCapture(0)
 with mp_face_mesh.FaceMesh(
     max_num_faces =1, 
@@ -49,8 +50,10 @@ with mp_face_mesh.FaceMesh(
             
             diff_x = x - mouse_current_position_x
             diff_y =y - mouse_current_position_y
-            pyautogui.move((diff_x)*100, (diff_y)*100,_pause=False)      
-            mouse_current_position_x,mouse_current_position_y= pyautogui.position()
+            mouse_current_position_x = x
+            mouse_current_position_y = y
+            pyautogui.move((diff_x), (diff_y),_pause=False)      
+            
                                                 # _pause 옵션 끄면 렉 사라짐                                                                                            
 
         cv.imshow('frame', frame)
