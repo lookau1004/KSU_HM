@@ -11,6 +11,8 @@ mediapipe = "^0.8.9"
 opencv-python = "^4.5.5"
 PyQt5 = "^5.15.6"
 PyAutoGUI = "^0.9.53"
+comtypes = "^1.1.11"
+pycaw = "^20220416"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

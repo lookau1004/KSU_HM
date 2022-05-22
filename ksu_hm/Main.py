@@ -7,7 +7,7 @@ import numpy as np
 import mediapipe as mp
 import sys
 import os
-import re    
+import re                                               # 문자열 정규식
 
 from pathlib import Path                                # 파일 찾는 라이브러리
 from multiprocessing import Process,Value
@@ -15,11 +15,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
+from ctypes import cast, POINTER                                # 볼륨 관련 모듈
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
 #from cvzone.HandTrackingModule import HandDetector
 
 GlobalMainDict = {}                          # 딕서녀리 전역 변수
 
-gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', 11: 'exit'}
+gesture_1 = {1:'click', 3:'altright', 4:'altleft',6:'volumeUp',7:'volumeUp',9:'spaceBar',11:'exit'}
 mp_face_mesh = mp.solutions.face_mesh
 LEFT_EYE = [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398]
 RIGHT_EYE = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246]
@@ -38,6 +42,11 @@ class ConfigData():                             # 옵션 설정 데이터들을 
         self.CamaraWidth = 640                                                                     # 640x480 | 480p | 4:3
         self.CamaraHeight = 480
         self.LabelNameDict = {}
+
+        devices = AudioUtilities.GetSpeakers()                                                     # 볼륨 관련 모듈 초기화
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        self.volume = cast(interface, POINTER(IAudioEndpointVolume))
+        self.volumeRange = self.volume.GetVolumeRange()
 
     def Clear(self):
         self.DefaultTimerNum = 0
@@ -147,7 +156,9 @@ class newCamara():                                                              
         start_time_limit = time.time()
         gesture_n_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
         gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
-        mouse_current_position = {'x':0, 'y':0}
+        mouse_current_position = {'x':0, 'y':0}    
+        volumeValue = self.configDataClass.volume.GetMasterVolumeLevel()
+        volumeFrame = 0
 
         while cap.isOpened():            
             success, frame = cap.read()
@@ -160,7 +171,7 @@ class newCamara():                                                              
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
                 
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
-                    sharedNum.value = DefaultSecond                         # 타이머 초기화
+                    sharedNum.value = DefaultSecond                         # 타이머 초기화                    
 
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
                         joint = np.zeros((21, 3))
@@ -181,7 +192,7 @@ class newCamara():                                                              
                         data = np.array([angle], dtype=np.float32)
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
                         idx = int(results[0][0])
-                        print(idx)
+                        #print(idx)
 
                         if(idx == 0) : # 시작 제스처일 경우
                             is_Mode = True
@@ -221,6 +232,7 @@ class newCamara():                                                              
                             elif (idx == 11) and gesture_n_times[idx] > 2:
                                 sharedNum.value = 0
                                 break
+
                         elif (idx == 5 ):
                             face_mesh = mp_face_mesh.FaceMesh(max_num_faces =1, refine_landmarks = True, min_detection_confidence =0.5,min_tracking_confidence=0.5 )  # 얼굴 인식과 랜드마크 옵션 설정
                             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -242,7 +254,31 @@ class newCamara():                                                              
                                 mouse_current_position['y'] = y
                                 pyautogui.move((diff_x), (diff_y),_pause=False)   # _pause 옵션 끄면 렉 사라짐                                                                                            
                                 gestrue_n_times = gesture_0_times       
+                        
+                        elif (idx == 6):                                                                                                                 # 윈도우 -37 = 0    // 0 == 100    
+                            volumeFrame += 1                                                                                                             # 무한 루프 돌때마다 +1
+                            if volumeFrame > 7:                                                                                                          # 7장 돌면
+                                volumeValue += 1                                                                                                         # 현재 볼륨값에 +1
+                                if volumeValue <= self.configDataClass.volumeRange[2] - 1 and volumeValue >= self.configDataClass.volumeRange[0] + 1:    # 컴퓨터 볼륨 범위에 에러 안전범위까지 더해서~
+                                    self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None)                                                  # 볼륨 값을 대입한다
+                                    print("volume UP")
+                                else:
+                                    pass         
+                                volumeFrame = 0                                                                                                          # 루프 개수 초기화                                            
+                            break
 
+                        elif (idx == 7):
+                            volumeFrame -= 1                                                                                           
+                            if volumeFrame < -7:
+                                volumeValue -= 1
+                                volumeFrame = 0
+                                if volumeValue >= self.configDataClass.volumeRange[0] + 1 and volumeValue <= self.configDataClass.volumeRange[2] - 13:
+                                    self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None) 
+                                    print("volume Down")
+                                else:
+                                    pass   
+                                volumeFrame = 0  
+                            break
 
                         elif (idx == 2):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
                             #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
@@ -257,10 +293,8 @@ class newCamara():                                                              
                             elif (abs(diff_x) + abs(diff_y)) > 0.005:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
                                 pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
                                 gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
-                       
-                        mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)  
-                        
-                                                                     # 관절을 프레임에 그린다.
+
+                        mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.
 
                 if start_time_limit < time.time():
                     is_Mode = False
@@ -335,13 +369,17 @@ if __name__ == '__main__':
     ui = ConfigWindow(mainWindow)
     mainWindow.show()
     app.exec_()
-    
+
     if 'Config' in GlobalMainDict:
         DefaultSecond = int(GlobalMainDict['Config'].DefaultTimerNum)
-        pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
+        pCamera = newCamara(DefaultSecond,sharedNum)
+    
+    # if 'Config' in GlobalMainDict:
+    #     DefaultSecond = int(GlobalMainDict['Config'].DefaultTimerNum)
+    #     pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
 
-        pCamera.start()
-        pCamera.join()
+    #     pCamera.start()
+    #     pCamera.join()
 
 
 # 1 윈도우 창안에서 값 교환 완료 , 데이터들을 클래스 형태로 정리한 후, 딕셔너리 형태로 변환 및 출력 완료
