@@ -7,7 +7,14 @@ Python 3.8 설치 후
 4. env/Scripts/activate.bat 실행
 5. cd KSU_HM 
 6. poetry install (poetry.lock 파일 있는 곳에서)
-7. ksu_hm 폴더 안에서 python Main.py or py Main.py or python -m Main or py -m Main
+7. ksu_hm 폴더 안에서 
+ python Main.py or 
+ py Main.py or 
+ python -m Main or 
+ py -m Main
+
+참고자료 : https://github.com/kairess/Rock-Paper-Scissors-Machine
+          https://www.youtube.com/watch?v=udeQhZHx-00
 
 https://user-images.githubusercontent.com/59619810/165879066-7946b94b-c411-4c8c-bc4b-4776ea803928.mp4
 
