@@ -1,6 +1,21 @@
 # KSU_HM
 
-터미널 해당 경로로 가서 poetry install 후 main.py 실행
+Python 3.8 설치 후
+1. python3 -m pip install --user -U virtualenv
+2. 원하는 폴더로 간 후 virtualenv env
+3. git clone 프로젝트 주소
+4. env/Scripts/activate.bat 실행
+5. cd KSU_HM 
+6. poetry install (poetry.lock 파일 있는 곳에서)
+7. ksu_hm 폴더 안에서 
+ python Main.py or </br>
+ py Main.py or </br>
+ python -m Main or </br>
+ py -m Main </br>
+
+참고자료 : </br>
+          https://github.com/kairess/Rock-Paper-Scissors-Machine </br>
+          https://www.youtube.com/watch?v=udeQhZHx-00
 
 https://user-images.githubusercontent.com/59619810/165879066-7946b94b-c411-4c8c-bc4b-4776ea803928.mp4
 
