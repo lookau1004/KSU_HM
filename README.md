@@ -8,12 +8,13 @@ Python 3.8 설치 후
 5. cd KSU_HM 
 6. poetry install (poetry.lock 파일 있는 곳에서)
 7. ksu_hm 폴더 안에서 
- python Main.py or 
- py Main.py or 
- python -m Main or 
- py -m Main
+ python Main.py or </br>
+ py Main.py or </br>
+ python -m Main or </br>
+ py -m Main </br>
 
-참고자료 : https://github.com/kairess/Rock-Paper-Scissors-Machine
+참고자료 : </br>
+          https://github.com/kairess/Rock-Paper-Scissors-Machine </br>
           https://www.youtube.com/watch?v=udeQhZHx-00
 
 https://user-images.githubusercontent.com/59619810/165879066-7946b94b-c411-4c8c-bc4b-4776ea803928.mp4
