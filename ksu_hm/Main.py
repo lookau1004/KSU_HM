@@ -127,6 +127,13 @@ class newCamara():                                                              
         gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
         mouse_current_position = {'x':0, 'y':0}
 
+        for win in pyautogui.getAllWindows():
+            print(win)
+        
+        win = pyautogui.getWindowsWithTitle('카카오톡')[0]
+        if win.isActive == False:
+            pyautogui
+
         while cap.isOpened():            
             success, frame = cap.read()
             idx = None
