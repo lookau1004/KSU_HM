@@ -85,6 +85,7 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
         if not isPath.exists():
             file = open(self.configDataClass.TextFilePath,"w",encoding="utf-8")
             file.write("1 : None")
+            sys.exit()
 
     def isCsvFile(self):
         isPath = Path(self.configDataClass.CsvFilePath)
