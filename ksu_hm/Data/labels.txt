@@ -4,8 +4,8 @@
 3 : b
 4 : c
 5 : d
-6 : e
-7 : f
+6 : volumeUp
+7 : volumeDown
 8 : g
 9 : h
 10 : i
