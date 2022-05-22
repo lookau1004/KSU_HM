@@ -89,7 +89,7 @@ class newTimer():                                                               
 class newCamara():                                                                        # 카메라 클래스 ( 카메라 관련 함수 )
     def __init__(self,DefaultSecond,sharedNum):
         self.configDataClass = ConfigData()                                                 # 데이터 클래스 생성
-        self.LoadTextFile()
+        self.LoadLabelFile()
         self.pTimer = Process(target = newTimer, name = "TimerProcess", args=(DefaultSecond,sharedNum,))        # 카메라 프로세스가 종료 했을때 타이머 프로세스도 종료 해야하므로 내부에서 선언
         self.pTimer.start()
         self.CamaraOpen(DefaultSecond,sharedNum)
@@ -229,7 +229,7 @@ class newCamara():                                                              
                     1,(192,192,192),2) # 은색
                 
                 if not idx == None:                                                                                                     # 관절을 입힌 프레임을 숫자 이미지를 추가하는 함수에 전달
-                    frame = self.NumberImg(idx,frame)
+                    frame = self.AddIdxToFrame(idx,frame)
                     cv2.putText(frame,self.configDataClass.LabelNameDict[idx],(400,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                  # 화면에 라벨명 표시함, 유니코드 지원 안함, 한글 라벨은 표시 불가
                     1,(0,255,0),2) # 초록색                                                                                                      
 
@@ -245,7 +245,7 @@ class newCamara():                                                              
         cv2.destroyAllWindows()
         self.pTimer.terminate()                                                                                                       # 타이머 프로세스 강제종료
 
-    def NumberImg(self,_idx,_frame):
+    def AddIdxToFrame(self,_idx,_frame):                                                                        # Index 이미지 파일을 frame에 합쳐주는 함수
         if _idx >= 0 and _idx <= 9:
             NumImg = cv2.imread(self.configDataClass.ImgFolderPath + str(_idx)+".png")                                                            
             h_NumImg, w_NumImg, _ = NumImg.shape
@@ -264,7 +264,7 @@ class newCamara():                                                              
 
         return _frame
 
-    def LoadTextFile(self):                                                                                     # labels.txt 파일 로드
+    def LoadLabelFile(self):                                                                                     # labels.txt 파일 로드
         i = 0   
         file = open(self.configDataClass.TextFilePath,"r",encoding="utf-8")
 
