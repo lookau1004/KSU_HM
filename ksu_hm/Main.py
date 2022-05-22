@@ -19,6 +19,12 @@ from PyQt5.QtCore import Qt
 GlobalMainDict = {}                          # 딕서녀리 전역 변수
 
 gesture_1 = {1:'click', 3:'altright', 4:'altleft', 9:'spaceBar', 11: 'exit'}
+mp_face_mesh = mp.solutions.face_mesh
+LEFT_EYE = [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398]
+RIGHT_EYE = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246]
+
+LEFT_IRIS = [474,475,476,477]
+RIGHT_IRIS = [469,470,471,472]
 
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
@@ -199,8 +205,30 @@ class newCamara():                                                              
                             elif (idx == 11) and gesture_n_times[idx] > 2:
                                 sharedNum.value = 0
                                 break
+                        elif (idx == 5 ):
+                            face_mesh = mp_face_mesh.FaceMesh(max_num_faces =1, refine_landmarks = True, min_detection_confidence =0.5,min_tracking_confidence=0.5 )  # 얼굴 인식과 랜드마크 옵션 설정
+                            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                            results = face_mesh.process(rgb_frame)
+                            img_h, img_w = frame.shape[:2]
+                            if results.multi_face_landmarks:
+                                mesh_points=np.array([np.multiply([p.x,p.y],[img_w, img_h]).astype(int)for p in results.multi_face_landmarks[0].landmark])  
+                                (l_cx, l_cy) , l_radius = cv2.minEnclosingCircle(mesh_points[LEFT_IRIS])
+                                (r_cx, r_cy) , l_radius = cv2.minEnclosingCircle(mesh_points[RIGHT_IRIS])
+                                center_left = np.array([l_cx,l_cy],dtype = np.int32) # 소수점을 정수화 홍체 중심
+                                center_right = np.array([r_cx,r_cy],dtype = np.int32)
+                                cv2.circle(frame, center_left, int(l_radius),(255,0,255),1,cv2.LINE_AA)
+                                cv2.circle(frame, center_right, int(l_radius),(255,0,255),1,cv2.LINE_AA)
+                                x,y = center_left
+            
+                                diff_x = x - mouse_current_position['x']
+                                diff_y =y - mouse_current_position['y']
+                                mouse_current_position['x'] = x
+                                mouse_current_position['y'] = y
+                                pyautogui.move((diff_x), (diff_y),_pause=False)   # _pause 옵션 끄면 렉 사라짐                                                                                            
+                                gestrue_n_times = gesture_0_times       
 
-                        elif (idx == 1):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
+
+                        elif (idx == 2):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
                             #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
                             diff_x = res.landmark[8].x - mouse_current_position['x']
                             diff_y = res.landmark[8].y - mouse_current_position['y']
@@ -214,7 +242,9 @@ class newCamara():                                                              
                                 pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
                                 gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
                        
-                        mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.
+                        mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)  
+                        
+                                                                     # 관절을 프레임에 그린다.
 
                 if start_time_limit < time.time():
                     is_Mode = False
