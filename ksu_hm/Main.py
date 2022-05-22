@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
-from cvzone.HandTrackingModule import HandDetector
+#from cvzone.HandTrackingModule import HandDetector
 
 GlobalMainDict = {}                          # 딕서녀리 전역 변수
 
@@ -102,7 +102,7 @@ class newCamara():                                                              
             min_detection_confidence=0.5, # 탐지 임계치
             min_tracking_confidence=0.5)  # 추적 임계치
 
-        detector = HandDetector(maxHands=1)
+#        detector = HandDetector(maxHands=1)
 
         if sys.platform == "win32":
             cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
