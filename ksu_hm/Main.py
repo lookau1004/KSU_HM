@@ -9,6 +9,7 @@ import sys
 import os
 import re    
 
+from pathlib import Path                                # 파일 찾는 라이브러리
 from multiprocessing import Process,Value
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
@@ -45,7 +46,9 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
         self.setup_UI(mainWindow)
         self.configDict = {}                       # 딕셔너리 생성
         self.configDataClass = ConfigData()        # 데이터 클래스 생성
-        
+        self.isCsvFile()
+        self.isTextFile()
+
     def setup_UI(self,mainWindow):                              # 윈도우 UI 생성 부분
         self.setupUi(mainWindow)                                # PyQT5(Window.py)의 setup Ui() 실행
         self.WinApplyBtn.clicked.connect(self.btnApply)         # 버튼에 함수 연결
@@ -70,6 +73,18 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
         mainWindow.close()                                                              # 현재 윈폼 종료
         
         #print("윈도우에서 sharedNum 값 : " , sharedNum.value)
+
+    def isTextFile(self):                                                                       # labels.txt 파일이 없다면 기본값으로 생성
+        isPath = Path(self.configDataClass.TextFilePath)
+        if not isPath.exists():
+            file = open(self.configDataClass.TextFilePath,"w",encoding="utf-8")
+            file.write("1 : None")
+
+    def isCsvFile(self):
+        isPath = Path(self.configDataClass.CsvFilePath)
+        if not isPath.exists():
+            print("CSV 파일이 필요합니다")
+            sys.exit()
 
 class newTimer():                                                                         # 타이머 클래스 ( 타이머에 관한 함수 포함 )
     def __init__(self,DefaultSecond,sharedNum):
@@ -251,8 +266,8 @@ class newCamara():                                                              
             h_NumImg, w_NumImg, _ = NumImg.shape
             h_frame, w_frame, _ = _frame.shape
 
-            center_y = int(h_frame / 7)
-            center_x = int(w_frame / 7)
+            center_y = int(h_frame / 6)
+            center_x = int(w_frame / 6)
 
             top_y = center_y - int(h_NumImg / 2)
             left_x = center_x - int(w_NumImg / 2)
