@@ -19,8 +19,6 @@ from ctypes import cast, POINTER                                # 볼륨 관련 
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
-#from cvzone.HandTrackingModule import HandDetector
-
 GlobalMainDict = {}                          # 딕서녀리 전역 변수
 
 gesture_1 = {1:'click', 3:'altright', 4:'altleft',6:'volumeUp',7:'volumeUp',9:'spaceBar',11:'exit'}
@@ -133,8 +131,6 @@ class newCamara():                                                              
             min_detection_confidence=0.5, # 탐지 임계치
             min_tracking_confidence=0.5)  # 추적 임계치
 
-#        detector = HandDetector(maxHands=1)
-
         if sys.platform == "win32":
             cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
@@ -195,7 +191,7 @@ class newCamara():                                                              
                         idx = int(results[0][0])
                         #print(idx)
 
-                        if(idx == 0) : # 시작 제스처일 경우
+                        if(idx == 99) : # 시작 제스처일 경우
                             is_Mode = True
                             start_time_limit = time.time() + 0.5
                             print('start')
@@ -263,8 +259,6 @@ class newCamara():                                                              
                                 if volumeValue <= self.configDataClass.volumeRange[2] - 1 and volumeValue >= self.configDataClass.volumeRange[0] + 1:    # 컴퓨터 볼륨 범위에 에러 안전범위까지 더해서~
                                     self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None)                                                  # 볼륨 값을 대입한다
                                     print("volume UP")
-                                else:
-                                    pass         
                                 volumeFrame = 0                                                                                                          # 루프 개수 초기화                                            
                             break
 
@@ -273,11 +267,9 @@ class newCamara():                                                              
                             if volumeFrame < -7:
                                 volumeValue -= 1
                                 volumeFrame = 0
-                                if volumeValue >= self.configDataClass.volumeRange[0] + 1 and volumeValue <= self.configDataClass.volumeRange[2] - 13:
+                                if volumeValue >= self.configDataClass.volumeRange[0] + 1 and volumeValue <= self.configDataClass.volumeRange[2] - 1:
                                     self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None) 
                                     print("volume Down")
-                                else:
-                                    pass   
                                 volumeFrame = 0  
                             break
 
@@ -294,11 +286,14 @@ class newCamara():                                                              
                             elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
                                 pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
                                 gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
+                            
                             # 아래가 마우스 기능 
                             if abs(res.landmark[10].y - res.landmark[12].y)  < 0.055 :  # 우클릭 
                                 pyautogui.click(button = 'right')
+                            
                             if res.landmark[4].x > res.landmark[3].x:   # 스페이스바 
                                 pyautogui.press('space')    
+                            
                             if abs(res.landmark[8].y - res.landmark[6].y) < 0.06: # 좌클릭 (마우스 다운)
                                 if not mouse_down:  
                                     pyautogui.mouseDown()
@@ -306,12 +301,14 @@ class newCamara():                                                              
                                     mouse_drag['x1'], mouse_drag['y1'] = pyautogui.position()
                                 else:
                                     pass
+                           
                             elif mouse_down:    #   좌클릭 (마우스 업: 위의 조건이 만족하지 않을때 실행 = 손 가락 펼침)
                                 pyautogui.mouseUp()
                                 mouse_drag['x2'], mouse_drag['y2'] = pyautogui.position()
                                 print("x diff>", mouse_drag['x2'] - mouse_drag['x1'])
                                 print("y diff>", mouse_drag['y2'] - mouse_drag['y1'])
                                 mouse_down = False 
+                        
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.
 
                 if start_time_limit < time.time():
@@ -391,14 +388,6 @@ if __name__ == '__main__':
     if 'Config' in GlobalMainDict:
         DefaultSecond = int(GlobalMainDict['Config'].DefaultTimerNum)
         pCamera = newCamara(DefaultSecond,sharedNum)
-    
-    # if 'Config' in GlobalMainDict:
-    #     DefaultSecond = int(GlobalMainDict['Config'].DefaultTimerNum)
-    #     pCamera = Process(target = newCamara, name = "CameraProcess", args=(DefaultSecond,sharedNum))
-
-    #     pCamera.start()
-    #     pCamera.join()
-
 
 # 1 윈도우 창안에서 값 교환 완료 , 데이터들을 클래스 형태로 정리한 후, 딕셔너리 형태로 변환 및 출력 완료
 # 2. 윈도우 창 -> 다른 클래스 및 함수에 데이터 교환 해야함 ( 전역 변수로 함 )
