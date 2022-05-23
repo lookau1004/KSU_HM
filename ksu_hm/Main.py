@@ -159,7 +159,8 @@ class newCamara():                                                              
         mouse_current_position = {'x':0, 'y':0}    
         volumeValue = self.configDataClass.volume.GetMasterVolumeLevel()
         volumeFrame = 0
-
+        mouse_down = False 
+        mouse_drag = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
         while cap.isOpened():            
             success, frame = cap.read()
             idx = None
@@ -280,20 +281,37 @@ class newCamara():                                                              
                                 volumeFrame = 0  
                             break
 
-                        elif (idx == 2):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
+                        elif (idx == 3):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
                             #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
-                            diff_x = res.landmark[8].x - mouse_current_position['x']
-                            diff_y = res.landmark[8].y - mouse_current_position['y']
-                            mouse_current_position['x'] = res.landmark[8].x
-                            mouse_current_position['y'] = res.landmark[8].y
+                            diff_x = res.landmark[9].x - mouse_current_position['x']
+                            diff_y = res.landmark[9].y - mouse_current_position['y']
+                            mouse_current_position['x'] = res.landmark[9].x
+                            mouse_current_position['y'] = res.landmark[9].y
 
                             if (abs(diff_x) + abs(diff_y)) > 0.25:                                                                       # 너무 많게는 포인터를 움직이지 않습니다.
                                 pass
 
-                            elif (abs(diff_x) + abs(diff_y)) > 0.005:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
+                            elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
                                 pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
                                 gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
-
+                            # 아래가 마우스 기능 
+                            if abs(res.landmark[10].y - res.landmark[12].y)  < 0.055 :  # 우클릭 
+                                pyautogui.click(button = 'right')
+                            if res.landmark[4].x > res.landmark[3].x:   # 스페이스바 
+                                pyautogui.press('space')    
+                            if abs(res.landmark[8].y - res.landmark[6].y) < 0.06: # 좌클릭 (마우스 다운)
+                                if not mouse_down:  
+                                    pyautogui.mouseDown()
+                                    mouse_down = True 
+                                    mouse_drag['x1'], mouse_drag['y1'] = pyautogui.position()
+                                else:
+                                    pass
+                            elif mouse_down:    #   좌클릭 (마우스 업: 위의 조건이 만족하지 않을때 실행 = 손 가락 펼침)
+                                pyautogui.mouseUp()
+                                mouse_drag['x2'], mouse_drag['y2'] = pyautogui.position()
+                                print("x diff>", mouse_drag['x2'] - mouse_drag['x1'])
+                                print("y diff>", mouse_drag['y2'] - mouse_drag['y1'])
+                                mouse_down = False 
                         mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.
 
                 if start_time_limit < time.time():
