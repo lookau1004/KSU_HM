@@ -19,7 +19,9 @@ from ctypes import cast, POINTER                                # 볼륨 관련 
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
-GlobalMainDict = {}                          # 딕서녀리 전역 변수
+from tensorflow.keras.models import load_model
+
+GlobalMainDict = {}                          # 딕서녀리 전역 변수 
 
 gesture_1 = {1:'click', 3:'altright', 4:'altleft',6:'volumeUp',7:'volumeUp',9:'spaceBar',11:'exit'}
 mp_face_mesh = mp.solutions.face_mesh
@@ -37,6 +39,7 @@ class ConfigData():                             # 옵션 설정 데이터들을 
         self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"                               # csv 파일 경로
         self.ImgFolderPath = self.DataFolderPath + "img/"
         self.TextFilePath = self.DataFolderPath + "labels.txt"
+        self.TensorflowFilePath = self.DefaultPath.replace("Main.py","Tensorflow/") + "KSU_model.h5"
         self.CamaraWidth = 640                                                                     # 640x480 | 480p | 4:3
         self.CamaraHeight = 480
         self.LabelNameDict = {}
@@ -157,6 +160,14 @@ class newCamara():                                                              
         volumeFrame = 0
         mouse_down = False 
         mouse_drag = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
+
+        seq = []
+        action_seq = []
+        actions = ['left', 'right', 'zoomin']
+        self.this_action = ""
+        seq_length = 30
+        model = load_model(self.configDataClass.TensorflowFilePath)
+
         while cap.isOpened():            
             success, frame = cap.read()
             idx = None
@@ -171,12 +182,12 @@ class newCamara():                                                              
                     sharedNum.value = DefaultSecond                         # 타이머 초기화                    
 
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
-                        joint = np.zeros((21, 3))
+                        joint = np.zeros((21, 4))
                         for j, lm in enumerate(res.landmark):
-                            joint[j] = [lm.x, lm.y, lm.z]
+                            joint[j] = [lm.x, lm.y, lm.z, lm.visibility]
                         v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
                         v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
-                        v = v2 - v1 # [20,3]
+                        v = v2 - v1 # [20,4]
             
                         v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
 
@@ -185,17 +196,40 @@ class newCamara():                                                              
                             v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
 
                         angle = np.degrees(angle)
+                        
+                        d = np.concatenate([joint.flatten(), angle]) # flatten() = 다차원 배열 1차원 배열 변환 // concatenate() numpy의 배열 연결 함수
+                        seq.append(d)
+
+                        if len(seq) >= seq_length:
+                            input_data = np.expand_dims(np.array(seq[-seq_length:], dtype=np.float32), axis=0) # expand_dims() 배열에 차원 추가
+                            y_pred = model.predict(input_data).squeeze()                                       # squeeze() 차원을 압축한다 + 1의 중복 제거// predict() 모델의 신뢰도가 배열로 보여짐
+                            i_pred = int(np.argmax(y_pred))                                                    # argmax() 배열에서 최대값 찾는 함수
+                            conf = y_pred[i_pred]
+
+                            if conf >= 0.9:                                                                     # 신뢰도가 90% 이상
+                                action = actions[i_pred]
+                                action_seq.append(action)
+                                
+                                if len(action_seq) >= 3:
+                                    self.this_action = '?'
+                                    if action_seq[-1] == action_seq[-2] == action_seq[-3]:                     # 손 모양 값이 연속되면
+                                        self.this_action = action
 
                         data = np.array([angle], dtype=np.float32)
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
                         idx = int(results[0][0])
                         #print(idx)
 
-                        if(idx == 99) : # 시작 제스처일 경우
+                        if(idx == 99) : # 시작 제스처일 경우  // 사용 안함
                             is_Mode = True
                             start_time_limit = time.time() + 0.5
                             print('start')
                             print('입력')
+                        
+                        if not self.this_action == '?':
+                            print(self.this_action) 
+                            cv2.putText(frame, self.this_action,(400,200),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                
+                        1,(0,0,255),2)
                         
                         if is_Mode and idx in gesture_1.keys(): # is_Mode = 시작 제스쳐 선입력 됐는지 확인
                             gesture_n_times[idx] += 1   # 제스쳐가 3번이상 인식 됐을때만, 아래 조건을 실행하게 합니다. 
