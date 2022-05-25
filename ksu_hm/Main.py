@@ -209,11 +209,13 @@ class newCamara():                                                              
                             if conf >= 0.9:                                                                     # 신뢰도가 90% 이상
                                 action = actions[i_pred]
                                 action_seq.append(action)
-                                
+
                                 if len(action_seq) >= 3:
                                     self.this_action = '?'
                                     if action_seq[-1] == action_seq[-2] == action_seq[-3]:                     # 손 모양 값이 연속되면
                                         self.this_action = action
+                                        print("들어온 제스처 값 : " + self.this_action)
+                                        action_seq.clear()
 
                         data = np.array([angle], dtype=np.float32)
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
@@ -226,8 +228,7 @@ class newCamara():                                                              
                             print('start')
                             print('입력')
                         
-                        if not self.this_action == '?':
-                            print(self.this_action) 
+                        if not self.this_action == "":
                             cv2.putText(frame, self.this_action,(400,200),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                
                         1,(0,0,255),2)
                         
@@ -363,7 +364,7 @@ class newCamara():                                                              
                     1,(0,255,0),2) # 초록색                                                                                                      
 
                 cv2.imshow('Camera Window', frame)                
-           
+
             if cv2.waitKey(1) == 27:
                 break
            
