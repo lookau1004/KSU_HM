@@ -20,8 +20,8 @@ IndexNumber = None                                      # 윈폼에서 가져오
  
 class ConfigData():                                                                                        # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):      
-        self.DefaultPath = os.path.abspath(__file__)                                                        # 현재 py 파일 경로        
-        self.DataFolderPath = self.DefaultPath.replace("gesture_train.py","Data/")                          # Data 폴더 경로
+        self.DefaultPath = os.path.dirname(os.path.abspath(__file__))                                       # 현재 py 파일 경로        
+        self.DataFolderPath = self.DefaultPath +"/Data/"                                                    # Data 폴더 경로
         self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"                                        # csv 파일 경로
         self.TextFilePath = self.DataFolderPath + "labels.txt"                                              # labels 파일 경로
         self.NewCsvFileName = "new_gesture_train.csv"

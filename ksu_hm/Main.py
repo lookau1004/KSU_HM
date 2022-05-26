@@ -34,12 +34,12 @@ RIGHT_IRIS = [469,470,471,472]
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
         self.DefaultTimerNum = 1                                                                   # 기본 타이머 값
-        self.DefaultPath = os.path.abspath(__file__)                                               # 현재 py 파일 경로
-        self.DataFolderPath = self.DefaultPath.replace("Main.py","Data/")                          # Data 폴더 경로
+        self.DefaultPath = os.path.dirname(os.path.abspath(__file__))                              # 현재 py 파일 경로
+        self.DataFolderPath = self.DefaultPath + "/Data/"                                          # Data 폴더 경로
         self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"                               # csv 파일 경로
         self.ImgFolderPath = self.DataFolderPath + "img/"
         self.TextFilePath = self.DataFolderPath + "labels.txt"
-        self.TensorflowFilePath = self.DefaultPath.replace("Main.py","Tensorflow/") + "KSU_model.h5"
+        self.TensorflowFilePath = self.DefaultPath + "/Tensorflow/KSU_model.h5"
         self.CamaraWidth = 640                                                                     # 640x480 | 480p | 4:3
         self.CamaraHeight = 480
         self.LabelNameDict = {}
