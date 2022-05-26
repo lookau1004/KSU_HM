@@ -23,7 +23,7 @@ from tensorflow.keras.models import load_model
 
 GlobalMainDict = {}                          # 딕서녀리 전역 변수 
 
-gesture_1 = {1:'click', 3:'altright', 4:'altleft',6:'volumeUp',7:'volumeUp',9:'spaceBar',11:'exit'}
+gesture_1 = {1:'click', 3:'altright', 4:'altleft',6:'volumeUp',7:'volumeUp',9:'spaceBar',11:'exit', 12:'firstsave', 13:'secondsave', 14:'capture'}
 mp_face_mesh = mp.solutions.face_mesh
 LEFT_EYE = [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398]
 RIGHT_EYE = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246]
@@ -160,7 +160,7 @@ class newCamara():                                                              
         volumeFrame = 0
         mouse_down = False 
         mouse_drag = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
-
+        mouse_capture = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
         seq = []
         action_seq = []
         actions = ['left', 'right', 'zoomin']
@@ -321,7 +321,25 @@ class newCamara():                                                              
                             elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
                                 pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
                                 gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
+                            break
+
+                        elif (idx == 12):
+                            #마우스 위치1 x,y 좌표 저장
+                            mouse_capture['x1'] = mouse_current_position['x']
+                            mouse_capture['y1'] = mouse_current_position['y']
+                            break
+
+                        elif (idx == 13):
+                            #마우스 위치2 x,y 좌표 저장
+                            mouse_capture['x2'] = mouse_current_position['x']
+                            mouse_capture['y2'] = mouse_current_position['y']
+                            break
+
+                        elif (idx == 14):
+                            #마우스 위치 1, 2 사이의 사각형 캡쳐
+                            pyautogui.screenshot('my_region.png', region=(mouse_capture['x1'], mouse_capture['y1'], mouse_capture['x2'], mouse_capture['y2']))
                             
+
                             # 아래가 마우스 기능 
                             if abs(res.landmark[10].y - res.landmark[12].y)  < 0.055 :  # 우클릭 
                                 pyautogui.click(button = 'right')
