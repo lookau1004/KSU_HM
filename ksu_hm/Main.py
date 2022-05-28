@@ -152,17 +152,20 @@ class newCamara():                                                              
         knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습
         
         is_Mode = False
+        is_TimeCopy = False
+        TensorGestureMode = False
+
         start_time_limit = time.time()
         gesture_n_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
         gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
-        mouse_current_position = {'x':0, 'y':0}
-        ZeroFrame = 0    
-        TensorGestureMode = False
+
         volumeValue = self.configDataClass.volume.GetMasterVolumeLevel()
-        volumeFrame = 0
+
+        mouse_current_position = {'x':0, 'y':0}
         mouse_down = False 
         mouse_drag = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
         mouse_capture = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
+
         seq = []
         action_seq = []
         actions = ['left', 'right', 'zoomin']
@@ -181,7 +184,8 @@ class newCamara():                                                              
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
                 
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
-                    sharedNum.value = DefaultSecond                         # 타이머 초기화                    
+                    sharedNum.value = DefaultSecond                         # 타이머 초기화           
+                    start_time_limit = time.time() + 10                     # 10초 후에 저장값 리셋         
 
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
                         joint = np.zeros((21, 4))
@@ -204,17 +208,19 @@ class newCamara():                                                              
                         idx = int(results[0][0])
 
                         if(idx == 0) : # 0번 인덱스일때 텐서 플로우 모드 켜짐
-                            #is_Mode = True
-                            #start_time_limit = time.time() + 0.5  
-                                                    
-                            if TensorGestureMode == False:
-                                ZeroFrame += 1
-                                if(ZeroFrame > 30):
-                                    TensorGestureMode = True  
-                        
+                            is_TimeCopy = True                                  # 지금 타임을 저장하였고
+ 
+                            if TensorGestureMode == False:                      # 텐서플로우 모드가 종료되어있으면
+                                gesture_n_times[0] += 1                         # 저장값을 증가하고
+                                if(gesture_n_times[0] > 30):                                
+                                    gesture_n_times[0] = 0                      # 초기화
+                                    TensorGestureMode = True                    # 제스처 모드 온
+
                         if(idx == 3):                                           # 3번 인덱스면 텐서 플로우 모드 종료
-                            ZeroFrame = 0
-                            TensorGestureMode = False    
+                            gesture_n_times[3] += 1
+                            if gesture_n_times[3] > 30:                         # 3번 인덱스가 계속 잡히면
+                                gesture_n_times[3] = 0
+                                TensorGestureMode = False                       # 텐서플로우 모드 종료
 
                         if TensorGestureMode == True:
                             if not self.this_action == "":
@@ -244,30 +250,18 @@ class newCamara():                                                              
                         if is_Mode and idx in gesture_1.keys(): # is_Mode = 시작 제스쳐 선입력 됐는지 확인
                             gesture_n_times[idx] += 1   # 제스쳐가 3번이상 인식 됐을때만, 아래 조건을 실행하게 합니다. 
 
-                            if  (idx == 1) and gesture_n_times[idx] > 2:
-                                pyautogui.click()
-                                is_Mode = False
-                                gestrue_n_times = gesture_0_times
-                                break
-
-                            elif (idx == 9) and gesture_n_times[idx] > 2:
-                                pyautogui.press('space')
-                                is_Mode = False
-                                gestrue_n_times = gesture_0_times
-                                break
-
-                            elif (idx == 3) and gesture_n_times[idx] > 2:
+                            if (idx == 1) and gesture_n_times[idx] > 2:
                                 pyautogui.hotkey(alt_command,'right')  # alt + 오른쪽 키 조합키 - 브라우저
                                 pyautogui.press('right')         # 오른쪽 키 누르기 - 파워포인트
                                 is_Mode = False
-                                gestrue_n_times = gesture_0_times
+                                gesture_n_times = gesture_0_times
                                 break
 
-                            elif (idx == 4) and gesture_n_times[idx] > 2:
+                            elif (idx == 2) and gesture_n_times[idx] > 2:
                                 pyautogui.hotkey(alt_command,'left')   # alt + 왼쪽 키 조합키 - 브라우저
                                 pyautogui.press('left')           # 왼쪽 키 누르기 - 파워포인트
                                 is_Mode = False
-                                gestrue_n_times = gesture_0_times
+                                gesture_n_times = gesture_0_times
                                 break
 
                             elif (idx == 11) and gesture_n_times[idx] > 2:
@@ -292,33 +286,33 @@ class newCamara():                                                              
                 
                                     diff_x = x - mouse_current_position['x']
                                     diff_y =y - mouse_current_position['y']
-                                    mouse_current_position['x'] = x
+                                    mouse_current_position['x'] = x 
                                     mouse_current_position['y'] = y
                                     pyautogui.move((diff_x), (diff_y),_pause=False)   # _pause 옵션 끄면 렉 사라짐                                                                                            
-                                    gestrue_n_times = gesture_0_times       
+                                    gesture_n_times[5] = 0       
                             
                             elif (idx == 6):                                                                                                                 # 윈도우 -37 = 0    // 0 == 100    
-                                volumeFrame += 1                                                                                                             # 무한 루프 돌때마다 +1
-                                if volumeFrame > 7:                                                                                                          # 7장 돌면
+                                gesture_n_times[6] += 1                                                                                                             # 무한 루프 돌때마다 +1
+                                if gesture_n_times[6] > 7:                                                                                                          # 7장 돌면
                                     volumeValue += 1                                                                                                         # 현재 볼륨값에 +1
                                     if volumeValue <= self.configDataClass.volumeRange[2] - 1 and volumeValue >= self.configDataClass.volumeRange[0] + 1:    # 컴퓨터 볼륨 범위에 에러 안전범위까지 더해서~
                                         self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None)                                                  # 볼륨 값을 대입한다
                                         print("volume UP")
-                                    volumeFrame = 0                                                                                                          # 루프 개수 초기화                                            
+                                    gesture_n_times[6] = 0                                                                                                          # 루프 개수 초기화                                            
                                 break
 
                             elif (idx == 7):
-                                volumeFrame -= 1                                                                                           
-                                if volumeFrame < -7:
+                                gesture_n_times[7] -= 1                                                                                           
+                                if gesture_n_times[7] < -7:
                                     volumeValue -= 1
-                                    volumeFrame = 0
+                                    gesture_n_times[7] = 0
                                     if volumeValue >= self.configDataClass.volumeRange[0] + 1 and volumeValue <= self.configDataClass.volumeRange[2] - 1:
                                         self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None) 
                                         print("volume Down")
-                                    volumeFrame = 0  
+                                    gesture_n_times[7] = 0  
                                 break
 
-                            elif (idx == 3):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
+                            elif (idx == 3):                                                                     # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기                                                     
                                 #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
                                 diff_x = res.landmark[9].x - mouse_current_position['x']
                                 diff_y = res.landmark[9].y - mouse_current_position['y']
@@ -330,7 +324,7 @@ class newCamara():                                                              
 
                                 elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
                                     pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
-                                    gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
+                                    #gesture_n_times = gesture_0_times                                                                       # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
                                     
                                 # 아래가 마우스 기능 
                                 if abs(res.landmark[10].y - res.landmark[12].y)  < 0.055 :  # 우클릭 
@@ -377,13 +371,13 @@ class newCamara():                                                              
 
 ###################################  if result.multi_hand_landmarks is not None: 끝  ###############################################################
 
-                # if start_time_limit < time.time():
-                #     is_Mode = False
-                #     gestrue_n_times = gesture_0_times
-                #     cv2.putText(frame, f'',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,(255,0,0),2)
+                if start_time_limit < time.time() and is_TimeCopy == True:
+                    is_TimeCopy = False
+                    gesture_n_times = gesture_0_times.copy()
+                    print("gesture_n_times reset")
 
                 if(TensorGestureMode):                                                                                                            # 입력 모드 체크
-                    cv2.putText(frame, f'Tensor mode',(200,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                           # 화면에 input mode 표시
+                    cv2.putText(frame, f'Mode ON',(200,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                           # 화면에 input mode 표시
                         1,(0,0,255),2) # 빨강                                                                                            # (0,0,255) Blue,Green,Red 순서
 
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                              # 화면에 타이머 표시
