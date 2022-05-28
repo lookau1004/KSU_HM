@@ -152,15 +152,20 @@ class newCamara():                                                              
         knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습
         
         is_Mode = False
+        is_TimeCopy = False
+        TensorGestureMode = False
+
         start_time_limit = time.time()
         gesture_n_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
         gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
-        mouse_current_position = {'x':0, 'y':0}    
+
         volumeValue = self.configDataClass.volume.GetMasterVolumeLevel()
-        volumeFrame = 0
+
+        mouse_current_position = {'x':0, 'y':0}
         mouse_down = False 
         mouse_drag = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
         mouse_capture = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
+        
         seq = []
         action_seq = []
         actions = ['left', 'right', 'zoomin']
@@ -179,7 +184,8 @@ class newCamara():                                                              
                 frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀
                 
                 if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
-                    sharedNum.value = DefaultSecond                         # 타이머 초기화                    
+                    sharedNum.value = DefaultSecond                         # 타이머 초기화           
+                    start_time_limit = time.time() + 10                     # 10초 후에 저장값 리셋         
 
                     for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
                         joint = np.zeros((21, 4))
@@ -195,182 +201,183 @@ class newCamara():                                                              
                             v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:],
                             v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
 
-                        angle = np.degrees(angle)
-                        
-                        d = np.concatenate([joint.flatten(), angle]) # flatten() = 다차원 배열 1차원 배열 변환 // concatenate() numpy의 배열 연결 함수
-                        seq.append(d)
-
-                        if len(seq) >= seq_length:
-                            input_data = np.expand_dims(np.array(seq[-seq_length:], dtype=np.float32), axis=0) # expand_dims() 배열에 차원 추가
-                            y_pred = model.predict(input_data).squeeze()                                       # squeeze() 차원을 압축한다 + 1의 중복 제거// predict() 모델의 신뢰도가 배열로 보여짐
-                            i_pred = int(np.argmax(y_pred))                                                    # argmax() 배열에서 최대값 찾는 함수
-                            conf = y_pred[i_pred]
-
-                            if conf >= 0.9:                                                                     # 신뢰도가 90% 이상
-                                action = actions[i_pred]
-                                action_seq.append(action)
-
-                                if len(action_seq) >= 3:
-                                    self.this_action = '?'
-                                    if action_seq[-1] == action_seq[-2] == action_seq[-3]:                     # 손 모양 값이 연속되면
-                                        self.this_action = action
-                                        print("들어온 제스처 값 : " + self.this_action)
-                                        action_seq.clear()
-
+                        angle = np.degrees(angle)    
+              
                         data = np.array([angle], dtype=np.float32)
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
                         idx = int(results[0][0])
-                        #print(idx)
 
-                        if(idx == 99) : # 시작 제스처일 경우  // 사용 안함
-                            is_Mode = True
-                            start_time_limit = time.time() + 0.5
-                            print('start')
-                            print('입력')
-                        
-                        if not self.this_action == "":
-                            cv2.putText(frame, self.this_action,(400,200),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                
-                        1,(0,0,255),2)
-                        
+                        if(idx == 0) : # 0번 인덱스일때 텐서 플로우 모드 켜짐
+                            is_TimeCopy = True                                  # 지금 타임을 저장하였고
+ 
+                            if TensorGestureMode == False:                      # 텐서플로우 모드가 종료되어있으면
+                                gesture_n_times[0] += 1                         # 저장값을 증가하고
+                                if(gesture_n_times[0] > 30):                                
+                                    gesture_n_times[0] = 0                      # 초기화
+                                    TensorGestureMode = True                    # 제스처 모드 온
+
+                        if(idx == 3):                                           # 3번 인덱스면 텐서 플로우 모드 종료
+                            gesture_n_times[3] += 1
+                            if gesture_n_times[3] > 30:                         # 3번 인덱스가 계속 잡히면
+                                gesture_n_times[3] = 0
+                                TensorGestureMode = False                       # 텐서플로우 모드 종료
+
+                        if TensorGestureMode == True:
+                            if not self.this_action == "":
+                                cv2.putText(frame, self.this_action,(400,200),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                
+                                1,(0,0,255),2)  
+
+                            d = np.concatenate([joint.flatten(), angle]) # flatten() = 다차원 배열 1차원 배열 변환 // concatenate() numpy의 배열 연결 함수
+                            seq.append(d)
+
+                            if len(seq) >= seq_length:
+                                input_data = np.expand_dims(np.array(seq[-seq_length:], dtype=np.float32), axis=0) # expand_dims() 배열에 차원 추가
+                                y_pred = model.predict(input_data).squeeze()                                       # squeeze() 차원을 압축한다 + 1의 중복 제거// predict() 모델의 신뢰도가 배열로 보여짐
+                                i_pred = int(np.argmax(y_pred))                                                    # argmax() 배열에서 최대값 찾는 함수
+                                conf = y_pred[i_pred]
+
+                                if conf >= 0.9:                                                                     # 신뢰도가 90% 이상
+                                    action = actions[i_pred]
+                                    action_seq.append(action)
+
+                                    if len(action_seq) >= 3:
+                                        self.this_action = '?'
+                                        if action_seq[-1] == action_seq[-2] == action_seq[-3]:                     # 손 모양 값이 연속되면
+                                            self.this_action = action
+                                            print("들어온 제스처 값 : " + self.this_action)
+                                            action_seq.clear()  
+            
                         if is_Mode and idx in gesture_1.keys(): # is_Mode = 시작 제스쳐 선입력 됐는지 확인
                             gesture_n_times[idx] += 1   # 제스쳐가 3번이상 인식 됐을때만, 아래 조건을 실행하게 합니다. 
 
-                            if  (idx == 1) and gesture_n_times[idx] > 2:
-                                pyautogui.click()
-                                is_Mode = False
-                                gestrue_n_times = gesture_0_times
-                                break
-
-                            elif (idx == 9) and gesture_n_times[idx] > 2:
-                                pyautogui.press('space')
-                                is_Mode = False
-                                gestrue_n_times = gesture_0_times
-                                break
-
-                            elif (idx == 3) and gesture_n_times[idx] > 2:
+                            if (idx == 1) and gesture_n_times[idx] > 2:
                                 pyautogui.hotkey(alt_command,'right')  # alt + 오른쪽 키 조합키 - 브라우저
                                 pyautogui.press('right')         # 오른쪽 키 누르기 - 파워포인트
                                 is_Mode = False
-                                gestrue_n_times = gesture_0_times
+                                gesture_n_times = gesture_0_times
                                 break
 
-                            elif (idx == 4) and gesture_n_times[idx] > 2:
+                            elif (idx == 2) and gesture_n_times[idx] > 2:
                                 pyautogui.hotkey(alt_command,'left')   # alt + 왼쪽 키 조합키 - 브라우저
                                 pyautogui.press('left')           # 왼쪽 키 누르기 - 파워포인트
                                 is_Mode = False
-                                gestrue_n_times = gesture_0_times
+                                gesture_n_times = gesture_0_times
                                 break
 
                             elif (idx == 11) and gesture_n_times[idx] > 2:
                                 sharedNum.value = 0
+                                break                          
+
+                        if TensorGestureMode == False:
+                            if (idx == 5):
+                                face_mesh = mp_face_mesh.FaceMesh(max_num_faces =1, refine_landmarks = True, min_detection_confidence =0.5,min_tracking_confidence=0.5 )  # 얼굴 인식과 랜드마크 옵션 설정
+                                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                                results = face_mesh.process(rgb_frame)
+                                img_h, img_w = frame.shape[:2]
+                                if results.multi_face_landmarks:
+                                    mesh_points=np.array([np.multiply([p.x,p.y],[img_w, img_h]).astype(int)for p in results.multi_face_landmarks[0].landmark])  
+                                    (l_cx, l_cy) , l_radius = cv2.minEnclosingCircle(mesh_points[LEFT_IRIS])
+                                    (r_cx, r_cy) , l_radius = cv2.minEnclosingCircle(mesh_points[RIGHT_IRIS])
+                                    center_left = np.array([l_cx,l_cy],dtype = np.int32) # 소수점을 정수화 홍체 중심
+                                    center_right = np.array([r_cx,r_cy],dtype = np.int32)
+                                    cv2.circle(frame, center_left, int(l_radius),(255,0,255),1,cv2.LINE_AA)
+                                    cv2.circle(frame, center_right, int(l_radius),(255,0,255),1,cv2.LINE_AA)
+                                    x,y = center_left
+                
+                                    diff_x = x - mouse_current_position['x']
+                                    diff_y =y - mouse_current_position['y']
+                                    mouse_current_position['x'] = x 
+                                    mouse_current_position['y'] = y
+                                    pyautogui.move((diff_x), (diff_y),_pause=False)   # _pause 옵션 끄면 렉 사라짐                                                                                            
+                                    gesture_n_times[5] = 0       
+                            
+                            elif (idx == 6):                                                                                                                 # 윈도우 -37 = 0    // 0 == 100    
+                                gesture_n_times[6] += 1                                                                                                             # 무한 루프 돌때마다 +1
+                                if gesture_n_times[6] > 7:                                                                                                          # 7장 돌면
+                                    volumeValue += 1                                                                                                         # 현재 볼륨값에 +1
+                                    if volumeValue <= self.configDataClass.volumeRange[2] - 1 and volumeValue >= self.configDataClass.volumeRange[0] + 1:    # 컴퓨터 볼륨 범위에 에러 안전범위까지 더해서~
+                                        self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None)                                                  # 볼륨 값을 대입한다
+                                        print("volume UP")
+                                    gesture_n_times[6] = 0                                                                                                          # 루프 개수 초기화                                            
                                 break
 
-                        elif (idx == 5 ):
-                            face_mesh = mp_face_mesh.FaceMesh(max_num_faces =1, refine_landmarks = True, min_detection_confidence =0.5,min_tracking_confidence=0.5 )  # 얼굴 인식과 랜드마크 옵션 설정
-                            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                            results = face_mesh.process(rgb_frame)
-                            img_h, img_w = frame.shape[:2]
-                            if results.multi_face_landmarks:
-                                mesh_points=np.array([np.multiply([p.x,p.y],[img_w, img_h]).astype(int)for p in results.multi_face_landmarks[0].landmark])  
-                                (l_cx, l_cy) , l_radius = cv2.minEnclosingCircle(mesh_points[LEFT_IRIS])
-                                (r_cx, r_cy) , l_radius = cv2.minEnclosingCircle(mesh_points[RIGHT_IRIS])
-                                center_left = np.array([l_cx,l_cy],dtype = np.int32) # 소수점을 정수화 홍체 중심
-                                center_right = np.array([r_cx,r_cy],dtype = np.int32)
-                                cv2.circle(frame, center_left, int(l_radius),(255,0,255),1,cv2.LINE_AA)
-                                cv2.circle(frame, center_right, int(l_radius),(255,0,255),1,cv2.LINE_AA)
-                                x,y = center_left
-            
-                                diff_x = x - mouse_current_position['x']
-                                diff_y =y - mouse_current_position['y']
-                                mouse_current_position['x'] = x
-                                mouse_current_position['y'] = y
-                                pyautogui.move((diff_x), (diff_y),_pause=False)   # _pause 옵션 끄면 렉 사라짐                                                                                            
-                                gestrue_n_times = gesture_0_times       
-                        
-                        elif (idx == 6):                                                                                                                 # 윈도우 -37 = 0    // 0 == 100    
-                            volumeFrame += 1                                                                                                             # 무한 루프 돌때마다 +1
-                            if volumeFrame > 7:                                                                                                          # 7장 돌면
-                                volumeValue += 1                                                                                                         # 현재 볼륨값에 +1
-                                if volumeValue <= self.configDataClass.volumeRange[2] - 1 and volumeValue >= self.configDataClass.volumeRange[0] + 1:    # 컴퓨터 볼륨 범위에 에러 안전범위까지 더해서~
-                                    self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None)                                                  # 볼륨 값을 대입한다
-                                    print("volume UP")
-                                volumeFrame = 0                                                                                                          # 루프 개수 초기화                                            
-                            break
+                            elif (idx == 7):
+                                gesture_n_times[7] -= 1                                                                                           
+                                if gesture_n_times[7] < -7:
+                                    volumeValue -= 1
+                                    gesture_n_times[7] = 0
+                                    if volumeValue >= self.configDataClass.volumeRange[0] + 1 and volumeValue <= self.configDataClass.volumeRange[2] - 1:
+                                        self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None) 
+                                        print("volume Down")
+                                    gesture_n_times[7] = 0  
+                                break
 
-                        elif (idx == 7):
-                            volumeFrame -= 1                                                                                           
-                            if volumeFrame < -7:
-                                volumeValue -= 1
-                                volumeFrame = 0
-                                if volumeValue >= self.configDataClass.volumeRange[0] + 1 and volumeValue <= self.configDataClass.volumeRange[2] - 1:
-                                    self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None) 
-                                    print("volume Down")
-                                volumeFrame = 0  
-                            break
+                            elif (idx == 3):                                                                     # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기                                                     
+                                #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
+                                diff_x = res.landmark[9].x - mouse_current_position['x']
+                                diff_y = res.landmark[9].y - mouse_current_position['y']
+                                mouse_current_position['x'] = res.landmark[9].x
+                                mouse_current_position['y'] = res.landmark[9].y
 
-                        elif (idx == 3):                                                                                                 # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기 
-                            #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
-                            diff_x = res.landmark[9].x - mouse_current_position['x']
-                            diff_y = res.landmark[9].y - mouse_current_position['y']
-                            mouse_current_position['x'] = res.landmark[9].x
-                            mouse_current_position['y'] = res.landmark[9].y
-
-                            if (abs(diff_x) + abs(diff_y)) > 0.25:                                                                       # 너무 많게는 포인터를 움직이지 않습니다.
-                                pass
-
-                            elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
-                                pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
-                                gestrue_n_times = gesture_0_times                                                                        # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
-                            break
-
-                        elif (idx == 12):
-                            #마우스 위치1 x,y 좌표 저장
-                            mouse_capture['x1'] = mouse_current_position['x']
-                            mouse_capture['y1'] = mouse_current_position['y']
-                            break
-
-                        elif (idx == 13):
-                            #마우스 위치2 x,y 좌표 저장
-                            mouse_capture['x2'] = mouse_current_position['x']
-                            mouse_capture['y2'] = mouse_current_position['y']
-                            break
-
-                        elif (idx == 14):
-                            #마우스 위치 1, 2 사이의 사각형 캡쳐
-                            pyautogui.screenshot('my_region.png', region=(mouse_capture['x1'], mouse_capture['y1'], mouse_capture['x2'], mouse_capture['y2']))
-                            
-
-                            # 아래가 마우스 기능 
-                            if abs(res.landmark[10].y - res.landmark[12].y)  < 0.055 :  # 우클릭 
-                                pyautogui.click(button = 'right')
-                            
-                            if res.landmark[4].x > res.landmark[3].x:   # 스페이스바 
-                                pyautogui.press('space')    
-                            
-                            if abs(res.landmark[8].y - res.landmark[6].y) < 0.06: # 좌클릭 (마우스 다운)
-                                if not mouse_down:  
-                                    pyautogui.mouseDown()
-                                    mouse_down = True 
-                                    mouse_drag['x1'], mouse_drag['y1'] = pyautogui.position()
-                                else:
+                                if (abs(diff_x) + abs(diff_y)) > 0.25:                                                                       # 너무 많게는 포인터를 움직이지 않습니다.
                                     pass
-                           
-                            elif mouse_down:    #   좌클릭 (마우스 업: 위의 조건이 만족하지 않을때 실행 = 손 가락 펼침)
-                                pyautogui.mouseUp()
-                                mouse_drag['x2'], mouse_drag['y2'] = pyautogui.position()
-                                print("x diff>", mouse_drag['x2'] - mouse_drag['x1'])
-                                print("y diff>", mouse_drag['y2'] - mouse_drag['y1'])
-                                mouse_down = False 
-                        
-                        mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.
 
-                if start_time_limit < time.time():
-                    is_Mode = False
-                    gestrue_n_times = gesture_0_times
-                    cv2.putText(frame, f'',(200,100),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,(255,0,0),2)
+                                elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
+                                    pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
+                                    #gesture_n_times = gesture_0_times                                                                       # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
+                                    
+                                # 아래가 마우스 기능 
+                                if abs(res.landmark[10].y - res.landmark[12].y)  < 0.055 :  # 우클릭 
+                                    pyautogui.click(button = 'right')
+                                
+                                if res.landmark[4].x > res.landmark[3].x:   # 스페이스바 
+                                    pyautogui.press('space')    
+                                
+                                if abs(res.landmark[8].y - res.landmark[6].y) < 0.06: # 좌클릭 (마우스 다운)
+                                    if not mouse_down:  
+                                        pyautogui.mouseDown() 
+                                        mouse_down = True 
+                                        mouse_drag['x1'], mouse_drag['y1'] = pyautogui.position()
+                                    else:
+                                        pass
+                                
+                                elif mouse_down:    #   좌클릭 (마우스 업: 위의 조건이 만족하지 않을때 실행 = 손 가락 펼침)
+                                    pyautogui.mouseUp()
+                                    mouse_drag['x2'], mouse_drag['y2'] = pyautogui.position()
+                                    print("x diff>", mouse_drag['x2'] - mouse_drag['x1'])
+                                    print("y diff>", mouse_drag['y2'] - mouse_drag['y1'])
+                                    mouse_down = False 
+                                break
 
-                if(is_Mode):                                                                                                            # 입력 모드 체크
-                    cv2.putText(frame, f'input mode',(200,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                           # 화면에 input mode 표시
+                            elif (idx == 12):
+                                #마우스 위치1 x,y 좌표 저장
+                                mouse_capture['x1'] = mouse_current_position['x']
+                                mouse_capture['y1'] = mouse_current_position['y']
+                                break
+
+                            elif (idx == 13):
+                                #마우스 위치2 x,y 좌표 저장
+                                mouse_capture['x2'] = mouse_current_position['x']
+                                mouse_capture['y2'] = mouse_current_position['y']
+                                break
+
+                            elif (idx == 14):
+                                #마우스 위치 1, 2 사이의 사각형 캡쳐
+                                pyautogui.screenshot('my_region.png', region=(mouse_capture['x1'], mouse_capture['y1'], mouse_capture['x2'], mouse_capture['y2']))
+
+###################################  for res in result.multi_hand_landmarks: 끝  ###################################################################
+
+                    mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.        
+
+###################################  if result.multi_hand_landmarks is not None: 끝  ###############################################################
+
+                if start_time_limit < time.time() and is_TimeCopy == True:
+                    is_TimeCopy = False
+                    gesture_n_times = gesture_0_times.copy()
+                    print("gesture_n_times reset")
+
+                if(TensorGestureMode):                                                                                                            # 입력 모드 체크
+                    cv2.putText(frame, f'Mode ON',(200,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                                           # 화면에 input mode 표시
                         1,(0,0,255),2) # 빨강                                                                                            # (0,0,255) Blue,Green,Red 순서
 
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                              # 화면에 타이머 표시
@@ -383,12 +390,16 @@ class newCamara():                                                              
 
                 cv2.imshow('Camera Window', frame)                
 
+###################################  if success: 끝  ##############################################################################################
+
             if cv2.waitKey(1) == 27:
                 break
            
             if (sharedNum.value == 0):
                 break
-    
+
+###################################  while cap.isOpened(): 끝  #####################################################################################   
+  
         cap.release()
         cv2.destroyAllWindows()
         self.pTimer.terminate()                                                                                                       # 타이머 프로세스 강제종료
