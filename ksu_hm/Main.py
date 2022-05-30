@@ -33,13 +33,14 @@ RIGHT_IRIS = [469,470,471,472]
 
 class ConfigData():                             # 옵션 설정 데이터들을 클래스 형태로 정리
     def __init__(self):
-        self.DefaultTimerNum = 1                                                                   # 기본 타이머 값
         self.DefaultPath = os.path.dirname(os.path.abspath(__file__))                              # 현재 py 파일 경로
         self.DataFolderPath = self.DefaultPath + "/Data/"                                          # Data 폴더 경로
         self.CsvFilePath = self.DataFolderPath + "gesture_train.csv"                               # csv 파일 경로
         self.ImgFolderPath = self.DataFolderPath + "img/"
         self.TextFilePath = self.DataFolderPath + "labels.txt"
         self.TensorflowFilePath = self.DefaultPath + "/Tensorflow/KSU_model.h5"
+        self.DefaultTimerNum = 1                                                                   # 기본 타이머 값
+        self.WhichMode = ""
         self.CamaraWidth = 640                                                                     # 640x480 | 480p | 4:3
         self.CamaraHeight = 480
         self.LabelNameDict = {}
@@ -73,6 +74,7 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
     def input_data(self):
         global GlobalMainDict                                                           # 전역 변수 사용
         self.configDataClass.DefaultTimerNum = int(self.WinTimerTxt.text())           # 데이터 클래스 안에 있는 기본 타이머 값에 윈도우 창에서 사용자가 입력한 값 대입
+        self.configDataClass.WhichMode = self.WinNormalModeBtn.text() if self.WinNormalModeBtn.isChecked() == True else self.WinCarModeBtn.text() # 삼항연산자
         self.configDict['Config'] = self.configDataClass                              # 딕셔너리에 생성된 클래스를 저장
         GlobalMainDict = self.configDict                                                # 저장한 딕셔너리를 전역 딕셔너리에 대입
         
@@ -87,8 +89,6 @@ class ConfigWindow(Window.Ui_MainWindow):          # Window 클래스 PyQT5 상�
         except:
             print("타이머 입력 에러")
         mainWindow.close()                                                              # 현재 윈폼 종료
-        
-        #print("윈도우에서 sharedNum 값 : " , sharedNum.value)
 
     def isTextFile(self):                                                                       # labels.txt 파일이 없다면 기본값으로 생성
         isPath = Path(self.configDataClass.TextFilePath)
@@ -120,13 +120,27 @@ class newTimer():                                                               
 
 class newCamara():                                                                        # 카메라 클래스 ( 카메라 관련 함수 )
     def __init__(self,DefaultSecond,sharedNum):
+        global GlobalMainDict
         self.configDataClass = ConfigData()                                                 # 데이터 클래스 생성
         self.LoadLabelFile()
-        self.pTimer = Process(target = newTimer, name = "TimerProcess", args=(DefaultSecond,sharedNum,))        # 카메라 프로세스가 종료 했을때 타이머 프로세스도 종료 해야하므로 내부에서 선언
-        self.pTimer.start()
-        self.CamaraOpen(DefaultSecond,sharedNum)
-       
-    def CamaraOpen(self,DefaultSecond,sharedNum):                                       # 카메라 메인 함수
+
+        if GlobalMainDict['Config'].WhichMode == "Normal Mode":                                                     # 노멀 모드
+            self.pTimer = Process(target = newTimer, name = "TimerProcess", args=(DefaultSecond,sharedNum))        # 카메라 프로세스가 종료 했을때 타이머 프로세스도 종료 해야하므로 내부에서 선언
+            self.pTimer.start()
+            self.NormalCamara(DefaultSecond,sharedNum)
+
+        elif GlobalMainDict['Config'].WhichMode == "Car Mode":                                                      # 카 모드
+            self.CarCamara()
+
+        else:
+            print("No Mode")
+            sys.exit()
+
+############################################################################################################
+########################################### 노멀 모드 #######################################################
+############################################################################################################
+   
+    def NormalCamara(self,DefaultSecond,sharedNum):                                       # 카메라 메인 함수
         mp_hands = mp.solutions.hands
         mp_drawing = mp.solutions.drawing_utils                                              # numpy hands
         hands = mp_hands.Hands(
@@ -143,7 +157,7 @@ class newCamara():                                                              
         else:           
             cap = cv2.VideoCapture(0)  
             alt_command = 'command'
-                        
+            
         file = np.genfromtxt(self.configDataClass.CsvFilePath, delimiter=',') # 제스처 저장값 읽어오기
         angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
@@ -389,7 +403,7 @@ class newCamara():                                                              
                 cv2.putText(frame, f'Timer: {int(sharedNum.value)}',(0,20),cv2.FONT_HERSHEY_COMPLEX_SMALL,                              # 화면에 타이머 표시
                     1,(192,192,192),2) # 은색
                 
-                cv2.imshow('Camera Window', frame)                
+                cv2.imshow('Normal Mode', frame)                
 
 ###################################  if success: 끝  ##############################################################################################
 
@@ -438,7 +452,84 @@ class newCamara():                                                              
             self.configDataClass.LabelNameDict[i] = _str
             i += 1
 
-        file.close()    
+        file.close() 
+############################################################################################################
+########################################## 카 모드 ##########################################################
+############################################################################################################
+
+    def CarCamara(self):
+        mp_hands = mp.solutions.hands
+        mp_drawing = mp.solutions.drawing_utils                                              # numpy hands
+        hands = mp_hands.Hands(
+            max_num_hands=1,
+            min_detection_confidence=0.5, # 탐지 임계치
+            min_tracking_confidence=0.5)  # 추적 임계치
+
+        if sys.platform == "win32":
+            cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.configDataClass.CamaraWidth)             # 카메라 해상도 조절
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.configDataClass.CamaraHeight)
+
+        else:           
+            cap = cv2.VideoCapture(0)  
+                    
+        file = np.genfromtxt(self.configDataClass.CsvFilePath, delimiter=',') # 제스처 저장값 읽어오기
+        angle = file[:,:-1].astype(np.float32) # 관절값만 추출 0 ~ 마지막 인덱스 전까지
+        label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
+
+        knn =cv2.ml.KNearest_create() #KNN 모델 초기화
+        knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습        
+
+        while cap.isOpened():            
+            success, frame = cap.read()  
+
+            if success:
+                frame = cv2.flip(frame,1) # 좌우반전           
+                frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)               # BGR 이미지(opencv 기본)를 RGB 이미지로
+                result = hands.process(frame)                               # RGB값으로 바뀐 프레임에 손 모델 해석 ( 손의 위치와 관절 탐지 )
+                frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)               # 원 상태 복귀           
+                
+                if result.multi_hand_landmarks is not None:                 # 결과값에 손이 있다면~
+                    for res in result.multi_hand_landmarks:                 # res 값 = landmark {x: y: z:}
+                        joint = np.zeros((21, 4))
+                        for j, lm in enumerate(res.landmark):
+                            joint[j] = [lm.x, lm.y, lm.z, lm.visibility]
+                        v1 = joint[[0,1,2,3,0,5,6,7,0,9,10,11,0,13,14,15,0,17,18,19],:] # Parent joint
+                        v2 = joint[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:] # Child joint
+                        v = v2 - v1 # [20,4]
+            
+                        v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
+
+                        angle = np.arccos(np.einsum('nt,nt->n',
+                            v[[0,1,2,4,5,6,8,9,10,12,13,14,16,17,18],:],
+                            v[[1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],:])) # [15,]
+
+                        angle = np.degrees(angle)    
+                
+                        data = np.array([angle], dtype=np.float32)
+                        ret, results, neighbours, dist = knn.findNearest(data, 3)
+                        idx = int(results[0][0])
+
+###################################  for res in result.multi_hand_landmarks: 끝  ###################################################################
+
+                    mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.        
+
+###################################  if result.multi_hand_landmarks is not None: 끝  ###############################################################
+                
+                cv2.imshow('Car Mode', frame)                
+
+###################################  if success: 끝  ##############################################################################################
+
+            if cv2.waitKey(1) == 27:
+                break
+           
+            if (sharedNum.value == 0):
+                break
+
+###################################  while cap.isOpened(): 끝  #####################################################################################   
+  
+        cap.release()
+        cv2.destroyAllWindows()   
 
 if __name__ == '__main__':
 

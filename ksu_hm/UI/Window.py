@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'window.ui'
+# Form implementation generated from reading ui file 'Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -32,9 +32,16 @@ class Ui_MainWindow(object):
         self.WinTimerTxt = QtWidgets.QLineEdit(self.centralwidget)
         self.WinTimerTxt.setGeometry(QtCore.QRect(90, 20, 113, 20))
         self.WinTimerTxt.setObjectName("WinTimerTxt")
+        self.WinNormalModeBtn = QtWidgets.QRadioButton(self.centralwidget)
+        self.WinNormalModeBtn.setGeometry(QtCore.QRect(30, 160, 121, 16))
+        self.WinNormalModeBtn.setChecked(True)
+        self.WinNormalModeBtn.setObjectName("WinNormalModeBtn")
+        self.WinCarModeBtn = QtWidgets.QRadioButton(self.centralwidget)
+        self.WinCarModeBtn.setGeometry(QtCore.QRect(30, 200, 90, 16))
+        self.WinCarModeBtn.setObjectName("WinCarModeBtn")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -51,6 +58,8 @@ class Ui_MainWindow(object):
         self.WinApplyBtn.setText(_translate("MainWindow", "Apply"))
         self.WinCurrentTimeLabel.setText(_translate("MainWindow", "CurrentTimer"))
         self.WincTimerValue.setText(_translate("MainWindow", "0"))
+        self.WinNormalModeBtn.setText(_translate("MainWindow", "Normal Mode"))
+        self.WinCarModeBtn.setText(_translate("MainWindow", "Car Mode"))
 
 
 if __name__ == "__main__":
