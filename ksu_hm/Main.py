@@ -16,9 +16,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
 from ctypes import cast, POINTER                                # 볼륨 관련 모듈
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-
+#from comtypes import CLSCTX_ALL
+#from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import matplotlib.pyplot as plt
+import matplotlib.image as img
 from tensorflow.keras.models import load_model
 
 GlobalMainDict = {}                          # 딕서녀리 전역 변수 
@@ -44,10 +45,10 @@ class ConfigData():                             # 옵션 설정 데이터들을 
         self.CamaraHeight = 480
         self.LabelNameDict = {}
 
-        devices = AudioUtilities.GetSpeakers()                                                     # 볼륨 관련 모듈 초기화
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        self.volume = cast(interface, POINTER(IAudioEndpointVolume))
-        self.volumeRange = self.volume.GetVolumeRange()
+        #devices = AudioUtilities.GetSpeakers()                                                     # 볼륨 관련 모듈 초기화
+        #interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        #self.volume = cast(interface, POINTER(IAudioEndpointVolume))
+        #self.volumeRange = self.volume.GetVolumeRange()
 
     def Clear(self):
         self.DefaultTimerNum = 0
@@ -159,10 +160,11 @@ class newCamara():                                                              
         gesture_n_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
         gesture_0_times = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, }
 
-        volumeValue = self.configDataClass.volume.GetMasterVolumeLevel()
+        #volumeValue = self.configDataClass.volume.GetMasterVolumeLevel()
 
         mouse_current_position = {'x':0, 'y':0}
         mouse_down = False 
+        pyautogui.FAILSAFE = False
         mouse_drag = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
         mouse_capture = {'x1':0, 'y1':0, 'x2':0, 'y2':0, }
         
@@ -245,6 +247,7 @@ class newCamara():                                                              
                                         if action_seq[-1] == action_seq[-2] == action_seq[-3]:                     # 손 모양 값이 연속되면
                                             self.this_action = action
                                             print("들어온 제스처 값 : " + self.this_action)
+                                            
                                             action_seq.clear()  
             
                         if is_Mode and idx in gesture_1.keys(): # is_Mode = 시작 제스쳐 선입력 됐는지 확인
@@ -284,33 +287,27 @@ class newCamara():                                                              
                                     cv2.circle(frame, center_right, int(l_radius),(255,0,255),1,cv2.LINE_AA)
                                     x,y = center_left
                 
-                                    diff_x = x - mouse_current_position['x']
-                                    diff_y =y - mouse_current_position['y']
-                                    mouse_current_position['x'] = x 
-                                    mouse_current_position['y'] = y
+                                    diff_x =  mouse_current_position['x']
+                                    diff_y =  mouse_current_position['y']
+                                   # mouse_current_position['x'] = x 
+                                    #mouse_current_position['y'] = y
                                     pyautogui.move((diff_x), (diff_y),_pause=False)   # _pause 옵션 끄면 렉 사라짐                                                                                            
                                     gesture_n_times[5] = 0       
                             
-                            elif (idx == 6):                                                                                                                 # 윈도우 -37 = 0    // 0 == 100    
-                                gesture_n_times[6] += 1                                                                                                             # 무한 루프 돌때마다 +1
-                                if gesture_n_times[6] > 7:                                                                                                          # 7장 돌면
-                                    volumeValue += 1                                                                                                         # 현재 볼륨값에 +1
-                                    if volumeValue <= self.configDataClass.volumeRange[2] - 1 and volumeValue >= self.configDataClass.volumeRange[0] + 1:    # 컴퓨터 볼륨 범위에 에러 안전범위까지 더해서~
-                                        self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None)                                                  # 볼륨 값을 대입한다
-                                        print("volume UP")
-                                    gesture_n_times[6] = 0                                                                                                          # 루프 개수 초기화                                            
-                                break
+                            #elif (idx == 6):                                                                                                                 # 윈도우 -37 = 0    // 0 == 100    
+                                #gesture_n_times[6] += 1                                                                                                             # 무한 루프 돌때마다 +1
+                                #if gesture_n_times[6] > 7:                                                                                                          # 7장 돌면
+                                   # volumeValue += 1                                                                                                         # 현재 볼륨값에 +1
+                                    #if volumeValue <= self.configDataClass.volumeRange[2] - 1 and volumeValue >= self.configDataClass.volumeRange[0] + 1:    # 컴퓨터 볼륨 범위에 에러 안전범위까지 더해서~
+                                       # self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None)                                                  # 볼륨 값을 대입한다
+                                        #print("volume UP")
+                                    #gesture_n_times[6] = 0                                                                                                          # 루프 개수 초기화                                            
+                               # break
 
-                            elif (idx == 7):
-                                gesture_n_times[7] -= 1                                                                                           
-                                if gesture_n_times[7] < -7:
-                                    volumeValue -= 1
-                                    gesture_n_times[7] = 0
-                                    if volumeValue >= self.configDataClass.volumeRange[0] + 1 and volumeValue <= self.configDataClass.volumeRange[2] - 1:
-                                        self.configDataClass.volume.SetMasterVolumeLevel(volumeValue, None) 
-                                        print("volume Down")
-                                    gesture_n_times[7] = 0  
-                                break
+                            #elif (idx == 7):
+                                #gesture_n_times[7] -= 1                                                                                           
+                                #if gesture_n_times[7] < -7:
+                                    #
 
                             elif (idx == 3):                                                                     # 테스트기능) 시작제스쳐 없이, 1번 제스쳐의 검지 끝 좌표값으로 마우스 제어하기                                                     
                                 #weight = 1 - abs(res.landmark[5].x - res.landmark[17].x)                                                    # 화면과 손의 거리에 따라 가중치를 주기 위한 변수
@@ -322,7 +319,7 @@ class newCamara():                                                              
                                 if (abs(diff_x) + abs(diff_y)) > 0.25:                                                                       # 너무 많게는 포인터를 움직이지 않습니다.
                                     pass
 
-                                elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다.
+                                elif (abs(diff_x) + abs(diff_y)) > 0.003:                                                                    # 너무 적게는 포인터를 움직이지 않습니다
                                     pyautogui.move((diff_x)*2000//1, (diff_y)*2000//1,_pause=False)                                          # _pause 옵션 끄면 렉 사라짐                                                                                            
                                     #gesture_n_times = gesture_0_times                                                                       # (diff_x)*2000**weight//1 값 <= (diff_x)*2000//1 값
                                     
@@ -344,8 +341,12 @@ class newCamara():                                                              
                                 elif mouse_down:    #   좌클릭 (마우스 업: 위의 조건이 만족하지 않을때 실행 = 손 가락 펼침)
                                     pyautogui.mouseUp()
                                     mouse_drag['x2'], mouse_drag['y2'] = pyautogui.position()
-                                    print("x diff>", mouse_drag['x2'] - mouse_drag['x1'])
-                                    print("y diff>", mouse_drag['y2'] - mouse_drag['y1'])
+                                    if (res.landmark[9].y - res.landmark[4].y) < 0:
+                                        pyautogui.screenshot('my_region.png', region=(mouse_drag['x1'], mouse_drag['y1'], mouse_drag['x2'], mouse_drag['y2'])) #region=(첫번째마우스x좌표,첫번째마우스y좌표,두번째마우스x좌표,두번째마우스y좌표) 설정후 좌표차이값에 따른 사각형범위영역 캡쳐
+                                        image = img.imread('my_region.png') #캡쳐된 이미지 불러오기
+                                        plt.imshow(image)
+                                        plt.show() # 캡쳐된 이미지 창에서 보여주기
+                                        break
                                     mouse_down = False 
                                 break
 
