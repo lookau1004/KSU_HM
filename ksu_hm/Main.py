@@ -510,12 +510,14 @@ class newCamara():                                                              
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
                         idx = int(results[0][0])
 
+                        print(res.landmark[9].x,res.landmark[9].y)
+
 ###################################  for res in result.multi_hand_landmarks: 끝  ###################################################################
 
                     mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.        
 
 ###################################  if result.multi_hand_landmarks is not None: 끝  ###############################################################
-                
+                frame = self.AddArrowToFrame(frame)
                 cv2.imshow('Car Mode', frame)                
 
 ###################################  if success: 끝  ##############################################################################################
@@ -530,6 +532,30 @@ class newCamara():                                                              
   
         cap.release()
         cv2.destroyAllWindows()   
+
+    def AddArrowToFrame(self,_frame):
+        forward = cv2.imread(self.configDataClass.ImgFolderPath +"forward.png")
+        forwardleft = cv2.imread(self.configDataClass.ImgFolderPath +"forwardleft.png")
+        forwardright = cv2.imread(self.configDataClass.ImgFolderPath +"forwardright.png")
+
+        backward = cv2.imread(self.configDataClass.ImgFolderPath +"backward.png")
+        backwardleft = cv2.imread(self.configDataClass.ImgFolderPath +"backwardleft.png")
+        backwardright = cv2.imread(self.configDataClass.ImgFolderPath +"backwardright.png")
+
+        # forward [0:144,0:71] // forwardleft [0:137,0:147]// forwardright [0:137,0:152]
+        # backward [0:140,0:69] // backwardleft [0:143,0:145] // backwardright [0:143,0:149]
+
+        _frame[0:137,0:147] = forwardleft 
+        _frame[0:144,317:388] = forward
+        _frame[0:137,488:640] = forwardright
+
+        _frame[337:480,0:145] = backwardleft
+        _frame[340:480,317:386] = backward
+        _frame[337:480,491:640] = backwardright
+
+        #_frame[top_y:bottom_y,left_x:right_x] = NumImg
+
+        return _frame
 
 if __name__ == '__main__':
 
