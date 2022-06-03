@@ -478,7 +478,10 @@ class newCamara():                                                              
         label = file[:,-1].astype(np.float32) # label 값만 추출, 마지막 인텍스만
 
         knn =cv2.ml.KNearest_create() #KNN 모델 초기화
-        knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습        
+        knn.train(angle,cv2.ml.ROW_SAMPLE,label) # KNN 학습     
+
+        w_frame= int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h_frame= int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))   
 
         while cap.isOpened():            
             success, frame = cap.read()  
@@ -510,7 +513,7 @@ class newCamara():                                                              
                         ret, results, neighbours, dist = knn.findNearest(data, 3)
                         idx = int(results[0][0])
 
-                        print(res.landmark[9].x,res.landmark[9].y)
+                        print(int(res.landmark[8].x * w_frame) ,int(res.landmark[8].y * h_frame))
 
 ###################################  for res in result.multi_hand_landmarks: 끝  ###################################################################
 
