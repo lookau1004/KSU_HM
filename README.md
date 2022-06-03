@@ -28,6 +28,8 @@ Gesture_Training.py
 
 <img width="559" alt="222" src="https://user-images.githubusercontent.com/59619810/168469465-b48bc129-4c14-44f8-94f4-088647f1eb78.png">
 
+<img width="178" alt="11" src="https://user-images.githubusercontent.com/59619810/171845652-499a3c97-caa6-4dd0-970a-ae33ed494fda.png">
+
 <img width="538" alt="b" src="https://user-images.githubusercontent.com/59619810/168414420-d4a5c809-4945-4f38-bcb7-f4eeee911df0.png">
 
 <img width="857" alt="c" src="https://user-images.githubusercontent.com/59619810/168414422-90f9d422-a7a9-40fa-8909-6bc0c5a5cc68.png">
