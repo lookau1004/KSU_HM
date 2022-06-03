@@ -22,13 +22,17 @@ https://user-images.githubusercontent.com/59619810/165879066-7946b94b-c411-4c8c-
 
 ![1](https://user-images.githubusercontent.com/59619810/171845088-4a187187-6340-4c51-b2a3-cdecf25e474d.png)
 
+<img width="178" alt="11" src="https://user-images.githubusercontent.com/59619810/171845652-499a3c97-caa6-4dd0-970a-ae33ed494fda.png">
+
+
+
+
+
 
 Gesture_Training.py
 
 
 <img width="559" alt="222" src="https://user-images.githubusercontent.com/59619810/168469465-b48bc129-4c14-44f8-94f4-088647f1eb78.png">
-
-<img width="178" alt="11" src="https://user-images.githubusercontent.com/59619810/171845652-499a3c97-caa6-4dd0-970a-ae33ed494fda.png">
 
 <img width="538" alt="b" src="https://user-images.githubusercontent.com/59619810/168414420-d4a5c809-4945-4f38-bcb7-f4eeee911df0.png">
 
