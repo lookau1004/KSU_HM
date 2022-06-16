@@ -23,7 +23,7 @@ from tensorflow.keras.models import load_model
 
 GlobalMainDict = {}                          # 딕서녀리 전역 변수 
 
-gesture_1 = {1:'click', 3:'altright', 4:'altleft',6:'volumeUp',7:'volumeUp',9:'spaceBar',11:'exit', 12:'firstsave', 13:'secondsave', 14:'capture'}
+gesture_1 = {1:'click', 3:'altright', 4:'altleft',6:'volumeUp',7:'volumeUp',9:'spaceBar',11:'exit'}
 mp_face_mesh = mp.solutions.face_mesh
 LEFT_EYE = [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398]
 RIGHT_EYE = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246]
@@ -359,36 +359,22 @@ class newCamara():                                                              
                                 
                                 if abs(res.landmark[8].y - res.landmark[6].y) < 0.06: # 좌클릭 (마우스 다운)
                                     if not mouse_down:  
-                                        pyautogui.mouseDown() 
+                                        pyautogui.mouseDown()                                       
                                         mouse_down = True 
                                         mouse_drag['x1'], mouse_drag['y1'] = pyautogui.position()
                                     else:
                                         pass
-                                
+                                   
                                 elif mouse_down:    #   좌클릭 (마우스 업: 위의 조건이 만족하지 않을때 실행 = 손 가락 펼침)
                                     pyautogui.mouseUp()
                                     mouse_drag['x2'], mouse_drag['y2'] = pyautogui.position()
-                                    print("x diff>", mouse_drag['x2'] - mouse_drag['x1'])
-                                    print("y diff>", mouse_drag['y2'] - mouse_drag['y1'])
+                                    if (res.landmark[9].y - res.landmark[4].y) < 0:
+                                        pyautogui.screenshot('my_region.png', region=(mouse_drag['x1'], mouse_drag['y1'], mouse_drag['x2'], mouse_drag['y2'])) #region=(첫번째마우스x좌표,첫번째마우스y좌표,두번째마우스x좌표,두번째마우스y좌표) 설정후 좌표차이값에 따른 사각형범위영역 캡쳐
+                                        path = os.path.realpath('') # path 에 절대 경로 저장
+                                        os.startfile(path) # path 에 저장된 경로를 탐색기를 통해 open
                                     mouse_down = False 
-                                break
-
-                            elif (idx == 12):
-                                #마우스 위치1 x,y 좌표 저장
-                                mouse_capture['x1'] = mouse_current_position['x']
-                                mouse_capture['y1'] = mouse_current_position['y']
-                                break
-
-                            elif (idx == 13):
-                                #마우스 위치2 x,y 좌표 저장
-                                mouse_capture['x2'] = mouse_current_position['x']
-                                mouse_capture['y2'] = mouse_current_position['y']
-                                break
-
-                            elif (idx == 14):
-                                #마우스 위치 1, 2 사이의 사각형 캡쳐
-                                pyautogui.screenshot('my_region.png', region=(mouse_capture['x1'], mouse_capture['y1'], mouse_capture['x2'], mouse_capture['y2']))
-
+                                    break
+                                
 ###################################  for res in result.multi_hand_landmarks: 끝  ###################################################################
 
                     mp_drawing.draw_landmarks(frame,res,mp_hands.HAND_CONNECTIONS)                                                   # 관절을 프레임에 그린다.        
