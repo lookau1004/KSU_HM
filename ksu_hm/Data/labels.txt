@@ -1,9 +1,9 @@
 0 : Tensorflow
-1 : Click
-2 : aa
-3 : Mouse
-4 : c
-5 : d
+1 : IndexFinger
+2 : V_Sign
+3 : ThreeFingers
+4 : FourFingers
+5 : FiveFingers
 6 : volumeUp
 7 : volumeDown
 8 : g
@@ -20,7 +20,7 @@
 19 : r
 20 : s
 21 : t
-22 : u
+22 : test
 23 : v
 24 : w
 25 : x
