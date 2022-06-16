@@ -258,7 +258,16 @@ class newCamara():                                                              
                                         self.this_action = '?'
                                         if action_seq[-1] == action_seq[-2] == action_seq[-3]:                     # 손 모양 값이 연속되면
                                             self.this_action = action
+                                            NowWindow = pyautogui.getActiveWindow()                                 # 현재 활성화된 창 가져오기
                                             print("들어온 제스처 값 : " + self.this_action)
+                                            
+                                            if self.this_action == "zoomin":
+                                                if NowWindow.isMaximized == False:
+                                                    NowWindow.maximize()
+                                            elif self.this_action == "left":
+                                                pyautogui.press('left')
+                                            elif self.this_action == "right":
+                                                pyautogui.press('right')
                                             action_seq.clear()  
             
                         if is_Mode and idx in gesture_1.keys(): # is_Mode = 시작 제스쳐 선입력 됐는지 확인
