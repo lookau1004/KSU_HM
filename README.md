@@ -14,9 +14,10 @@ Python 3.8 설치 후
  py -m Main </br>
 
 참고자료 : </br>
+          https://google.github.io/mediapipe/solutions/hands.html</br>
           https://github.com/kairess/Rock-Paper-Scissors-Machine </br>
-          https://www.youtube.com/watch?v=udeQhZHx-00
-          https://google.github.io/mediapipe/solutions/hands.html
+          https://www.youtube.com/watch?v=udeQhZHx-00</br>
+          https://google.github.io/mediapipe/solutions/hands.html</br>
 
 ![1](https://user-images.githubusercontent.com/59619810/171845088-4a187187-6340-4c51-b2a3-cdecf25e474d.png)
 
@@ -26,9 +27,10 @@ Python 3.8 설치 후
 
 <img width="315" alt="bb" src="https://user-images.githubusercontent.com/59619810/174114779-1f4ef5af-93eb-4dca-9aac-6af369fad769.png">
 
+![fff](https://user-images.githubusercontent.com/59619810/174116813-8b95746a-cfd2-46de-93b8-f767d6c7faba.jpg)
 
 
-
+</br></br></br></br></br></br>
 
 Gesture_Training.py
 
