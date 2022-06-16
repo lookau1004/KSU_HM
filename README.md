@@ -18,8 +18,6 @@ Python 3.8 설치 후
           https://www.youtube.com/watch?v=udeQhZHx-00
           https://google.github.io/mediapipe/solutions/hands.html
 
-https://user-images.githubusercontent.com/59619810/165879066-7946b94b-c411-4c8c-bc4b-4776ea803928.mp4
-
 ![1](https://user-images.githubusercontent.com/59619810/171845088-4a187187-6340-4c51-b2a3-cdecf25e474d.png)
 
 <img width="393" alt="cccc" src="https://user-images.githubusercontent.com/59619810/174115515-294fb4cc-af21-490a-b2c1-dbc505535f88.png">
