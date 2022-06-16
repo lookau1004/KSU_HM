@@ -14,10 +14,8 @@ Python 3.8 설치 후
  py -m Main </br>
 
 참고자료 : </br>
-          https://google.github.io/mediapipe/solutions/hands.html</br>
-          https://github.com/kairess/Rock-Paper-Scissors-Machine </br>
-          https://www.youtube.com/watch?v=udeQhZHx-00</br>
-          https://google.github.io/mediapipe/solutions/hands.html</br>
+          Google Mediapipe : https://google.github.io/mediapipe/solutions/hands.html</br>
+          빵형의 개발도상국 : https://github.com/kairess/Rock-Paper-Scissors-Machine </br>
 
 ![1](https://user-images.githubusercontent.com/59619810/171845088-4a187187-6340-4c51-b2a3-cdecf25e474d.png)
 
