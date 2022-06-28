@@ -17,7 +17,7 @@ Python 3.8 설치 후
           Google Mediapipe : https://google.github.io/mediapipe/solutions/hands.html</br>
           빵형의 개발도상국 : https://github.com/kairess/Rock-Paper-Scissors-Machine </br>
           
-[![Demo Video](http://img.youtube.com/vi/dTCMob20sHU/0.jpg)](https://youtu.be/dTCMob20sHU?t=0s)
+Demo Video Link : https://www.youtube.com/watch?v=dTCMob20sHU  </br></br></br>
 
 ![1](https://user-images.githubusercontent.com/59619810/171845088-4a187187-6340-4c51-b2a3-cdecf25e474d.png)
 
@@ -39,5 +39,8 @@ Gesture_Training.py
 
 <img width="538" alt="b" src="https://user-images.githubusercontent.com/59619810/168414420-d4a5c809-4945-4f38-bcb7-f4eeee911df0.png">
 
-<img width="857" alt="c" src="https://user-images.githubusercontent.com/59619810/168414422-90f9d422-a7a9-40fa-8909-6bc0c5a5cc68.png">
+<img width="857" alt="c" src="https://user-images.githubusercontent.com/59619810/168414422-90f9d422-a7a9-40fa-8909-6bc0c5a5cc68.png"> </br>
+
+
+경성대학교 컴공 제스처 인식 프로그램 (Kyungsung Univ Gesture Demo)
 
