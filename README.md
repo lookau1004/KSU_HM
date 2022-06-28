@@ -17,7 +17,7 @@ Python 3.8 설치 후
           Google Mediapipe : https://google.github.io/mediapipe/solutions/hands.html</br>
           빵형의 개발도상국 : https://github.com/kairess/Rock-Paper-Scissors-Machine </br>
           
-https://www.youtube.com/watch?v=dTCMob20sHU 
+[![Demo Video](http://img.youtube.com/vi/dTCMob20sHU/0.jpg)](https://youtu.be/dTCMob20sHU?t=0s)
 
 ![1](https://user-images.githubusercontent.com/59619810/171845088-4a187187-6340-4c51-b2a3-cdecf25e474d.png)
 
